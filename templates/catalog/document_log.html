@@ -1,0 +1,53 @@
+{# catalog/templates/catalog/document_log.html #}
+{% extends 'base.html' %}
+
+{% block title %}Журнал документов{% endblock %}
+
+{% block header_title %}Журнал документов{% endblock %} {# Меняем заголовок в шапке #}
+
+
+{% block content %}
+    <h2>Журнал созданных документов</h2>
+
+    {# Сообщения Django будут отображаться автоматически из base.html #}
+    {# УДАЛИТЕ БЛОК С СООБЩЕНИЯМИ ОТСЮДА #}
+    {#
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    #}
+
+
+    {% if logs %}
+        {# Таблица унаследует стили из style.css #}
+        <table>
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Тип</th>
+                    <th>Дата и время</th>
+                    <th>Пользователь</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                    <tr>
+                        <td>{{ log.document_number }}</td>
+                        <td>{{ log.get_document_type_display }}</td>
+                        <td>{{ log.timestamp|date:"d.m.Y H:i" }}</td>
+                        <td>{{ log.user.username|default:"(Удален)" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Журнал документов пуст.</p>
+    {% endif %}
+
+    <p style="margin-top: 20px;"><a href="{% url 'catalog_selection' %}">Вернуться к каталогу</a></p>
+
+{% endblock %}

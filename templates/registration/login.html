@@ -1,0 +1,30 @@
+{# templates/registration/login.html #}
+{% extends 'base.html' %}
+
+{% block title %}Вход{% endblock %}
+
+{% block header_title %}Вход в систему{% endblock %} {# Меняем заголовок в шапке для этой страницы #}
+
+{% block content %}
+    <h2>Вход</h2>
+
+    {# Сообщения Django будут отображаться автоматически из base.html #}
+
+    <div class="login-container" style="max-width: 400px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; background-color: white;">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }} {# Отображаем форму как абзацы, базовые стили из style.css применятся #}
+
+            {# Скрытое поле для редиректа #}
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
+
+            <button type="submit">Войти</button> {# Кнопка стилизована через style.css #}
+        </form>
+
+        {# Дополнительные ссылки (например, "Забыли пароль?") можно добавить здесь #}
+        {# <p style="margin-top: 15px;"><a href="#">Забыли пароль?</a></p> #}
+    </div>
+
+{% endblock %}

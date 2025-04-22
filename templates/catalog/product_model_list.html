@@ -1,0 +1,40 @@
+{% block title %}Выбор моделей{% endblock %}
+
+{% block content %}
+    <h2>Выберите модели продуктов</h2>
+
+    {% if product_models %}
+        <ul>
+            {% for model in product_models %}
+                <li>
+                    {{ model.product.category.name }} - {{ model.product.name }} - {{ model.name }} ({{ model.price }}$)
+                    {% if model.details %}
+                        <br><small>{{ model.details|linebreaksbr }}</small> {# Отображаем детали с переносами строк #}
+                    {% endif %}
+
+                    {# Форма для добавления модели в корзину #}
+                    {# Используем POST запрос #}
+                    <form action="{% url 'add_to_selection' model.id %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        {# Опционально: можно добавить input для количества, но начнем с 1 #}
+                        {# <input type="number" name="quantity" value="1" min="1" style="width: 50px;"> #}
+                        <button type="submit">Добавить в выбор {% if model.id|stringformat:"s" in selection %}(сейчас: {{ selection|get_item:model.id|default:0 }}){% endif %}</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>В каталоге пока нет моделей продуктов.</p>
+    {% endif %}
+
+    <p><a href="{% url 'view_selection' %}">Перейти к выбранным моделям</a></p>
+
+{% endblock %}
+
+{# Для доступа к элементам словаря в шаблоне может понадобиться кастомный фильтр, #}
+{# если версия Django старая. Для новых версий {{ dictionary.key }} работает. #}
+{# Если нет, создайте тег: #}
+{% comment %}
+{% load my_custom_tags %} {# Нужно создать файл templatetags/my_custom_tags.py #}
+{% endcomment %}
+{% load custom_filters %} {# Создадим позже кастомный фильтр get_item #}

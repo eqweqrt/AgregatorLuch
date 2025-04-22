@@ -1,0 +1,52 @@
+{# templates/base.html #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Мой сайт{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <h1>{% block header_title %}ЛУЧ IT Агрегатор{% endblock %}</h1>
+        <nav>
+             {% if user.is_authenticated %}
+                 Привет, {{ user.username }}!
+                 <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                     {% csrf_token %}
+                     <button type="submit">Выход</button>
+                 </form>
+             {% else %}
+                 <a href="{% url 'login' %}" class="button">Вход</a>
+             {% endif %}
+             {# === ИЗМЕНЕНО: Ссылка "Главная" ведет на каталог === #}
+             <a href="{% url 'catalog_selection' %}">Главная</a>
+             {# ================================================= #}
+             {% if user.is_staff %}
+                 <a href="{% url 'document_log' %}">Журнал документов</a>
+             {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>© {% now "Y" %} ЛУЧ IT. Все права защищены.</p>
+    </footer>
+
+    {% block extra_body %}{% endblock %}
+</body>
+</html>

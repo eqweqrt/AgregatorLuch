@@ -1,0 +1,132 @@
+{# catalog/templates/catalog/commercial_offer_pdf_template.html #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ offer_title|default:"Коммерческое предложение" }}</title>
+    <style type="text/css">
+    /* ============================================================== */
+    /* Основные стили для PDF */
+    /* ============================================================== */
+    @page {
+        size: a4 portrait;
+        margin: 1cm;
+    }
+
+    /* Определяем пользовательский шрифт 'DejaVu Sans', используя данные Base64 */
+    /* Обычное начертание */
+    {% if dejavu_sans_regular_base64 %}
+    @font-face {
+        font-family: 'DejaVu Sans';
+        src: url('data:font/ttf;base64,{{ dejavu_sans_regular_base64 }}') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+    }
+    {% endif %}
+
+    /* Жирное начертание */
+    {% if dejavu_sans_bold_base64 %}
+    @font-face {
+        font-family: 'DejaVu Sans'; /* То же имя шрифта */
+        src: url('data:font/ttf;base64,{{ dejavu_sans_bold_base64 }}') format('truetype');
+        font-weight: bold;
+        font-style: normal;
+    }
+    {% endif %}
+
+    /* Указываем использовать этот шрифт для всего тела документа */
+    body {
+        font-family: 'DejaVu Sans', sans-serif; /* Основной шрифт с фоллбэком */
+        font-size: 10pt; /* Или ваш размер шрифта */
+        line-height: 1.4; /* Межстрочный интервал для читаемости */
+    }
+
+    /* Убедитесь, что жирный текст использует правильный font-weight */
+    strong, b, th {
+         font-weight: bold; /* Активирует жирное начертание @font-face */
+    }
+
+    /* ... остальные стили ... */
+
+    p {
+        margin-bottom: 3mm;
+    }
+    .header-info {
+         margin-bottom: 5mm;
+    }
+
+    /* ... Стили таблицы, изображений и т.д. ... */
+
+</style>
+</head>
+<body>
+    <h1>{{ offer_title|default:"Коммерческое предложение" }}</h1>
+
+    {# Модифицированный параграф для даты и номера #}
+    <p class="header-info">
+        Дата: {{ document_date|date:"d.m.Y" }} {# Используем переданный объект даты и фильтр форматирования #}
+        {% if document_number %}
+                 {# Добавляем несколько неразрывных пробелов для отступа #}
+             Номер документа: <strong>{{ document_number }}</strong> {# Отображаем номер, можно сделать жирным #}
+        {% endif %}
+    </p>
+
+    <p>Предлагаем вам ознакомиться с коммерческим предложением на поставку следующей продукции:</p>
+
+    {# ... остальная часть шаблона (таблица, итог, контакты) остается прежней ... #}
+    <h2>Выбранные товары</h2>
+    <table>
+       <thead>
+           <tr>
+               <th style="width: 50%;">Наименование / Описание / Изображение</th>
+               <th style="width: 10%;">Кол-во</th>
+               <th style="width: 20%;">Цена за ед., руб.</th>
+               <th style="width: 20%;">Сумма, руб.</th>
+           </tr>
+       </thead>
+       <tbody>
+           {% for item in selected_items %}
+               <tr>
+                   <td class="product-info-cell">
+                       <strong>{{ item.model.product.name }} - {{ item.model.name }}</strong>
+                       {% if item.model.details %}
+                           <span class="product-description">{{ item.model.details|linebreaksbr }}</span>
+                       {% endif %}
+                       {% if item.image_data_uri %}
+                           <img src="{{ item.image_data_uri }}" class="product-image" alt="Изображение модели {{ item.model.name }}">
+                       {% endif %}
+                   </td>
+                   <td class="text-center">{{ item.quantity }}</td>
+                   <td class="text-right">{{ item.unit_price|floatformat:2 }}</td>
+                   <td class="text-right">{{ item.item_total|floatformat:2 }}</td>
+               </tr>
+           {% empty %}
+               <tr>
+                   <td colspan="4" class="text-center">Нет выбранных позиций в выборе.</td>
+               </tr>
+           {% endfor %}
+       </tbody>
+       <tfoot>
+           <tr>
+               <td colspan="3" class="text-right"><strong>Итого:</strong></td>
+               <td class="text-right"><strong>{{ total_price|floatformat:2 }}</strong></td>
+           </tr>
+       </tfoot>
+    </table>
+
+    {# Остальное содержимое КП #}
+    <p>Сроки поставки: {{ delivery_terms }}</p>
+    <p>Гарантийные условия: {{ warranty_terms }}</p>
+
+    {# Блок с информацией о менеджере #}
+    <div style="margin-top: 30mm;">
+        <p>С уважением,</p>
+        <p>Менеджер: {{ manager_name }}</p>
+        <p>Компания: {{ company_name }}</p>
+        <p>Контакты: {{ manager_contact }}, {{ manager_email }}</p>
+        <p>Подпись: _________________________ /{{ manager_signature_name }}/</p>
+        <p>{{ attorney_details }}</p>
+    </div>
+
+</body>
+</html>

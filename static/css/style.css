@@ -1,0 +1,256 @@
+/* static/css/style.css */
+
+/* Общие стили для всего тела страницы */
+body {
+    font-family: 'Arial', sans-serif; /* Используйте шрифт, который вам нравится */
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f8f8; /* Легкий фоновый цвет */
+    color: #333; /* Цвет текста по умолчанию */
+}
+
+/* Контейнер для основного контента, чтобы центрировать его и добавить отступы */
+main {
+    /* max-width: 1200px; /* Максимальная ширина контента */
+    margin: 20px auto; /* Центрирование и отступ сверху/снизу */
+    padding: 0 20px; /* Отступы по бокам */
+}
+
+h1, h2, h3 {
+    color: #0056b3; /* Цвет заголовков */
+    margin-bottom: 15px;
+}
+
+/* --- Стили для шапки (header) --- */
+header {
+    background-color: #007bff; /* Основной цвет шапки */
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Небольшая тень */
+}
+
+header h1 {
+    color: white; /* Заголовок в шапке белым */
+    margin: 0;
+    font-size: 1.8em;
+}
+
+header nav {
+    margin-top: 10px;
+}
+
+header nav a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+    font-size: 1.1em;
+    transition: color 0.3s ease; /* Плавное изменение цвета при наведении */
+}
+
+header nav a:hover {
+    color: #e9ecef; /* Цвет при наведении */
+}
+
+/* Стиль для формы выхода в шапке */
+header nav form {
+    display: inline; /* Чтобы форма была в строку с ссылками */
+    margin: 0 15px;
+}
+
+header nav form button {
+     border: none;
+     background: none;
+     color: white; /* Цвет кнопки как у ссылок */
+     cursor: pointer;
+     padding: 0;
+     font-size: 1.1em;
+     transition: color 0.3s ease;
+}
+
+header nav form button:hover {
+    color: #e9ecef;
+    text-decoration: underline; /* Подчеркивание при наведении */
+}
+
+
+/* --- Стили для подвала (footer) --- */
+footer {
+    text-align: center;
+    padding: 15px 20px;
+    margin-top: 40px;
+    color: #777; /* Серый цвет текста */
+    font-size: 0.9em;
+    border-top: 1px solid #eee; /* Линия сверху */
+    background-color: #f2f2f2;
+}
+
+
+/* --- Стили для сообщений Django (messages) --- */
+.messages {
+    list-style: none;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+}
+
+.messages li {
+    padding: 8px 15px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.messages .success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.messages .error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.messages .warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.messages .info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+
+/* --- Базовые стили для таблиц --- */
+table {
+    width: 100%;
+    border-collapse: collapse; /* Убираем двойные границы */
+    margin: 20px 0;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.1); /* Небольшая тень таблицы */
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd; /* Границы ячеек */
+    text-align: left;
+}
+
+th {
+    background-color: #e9ecef; /* Светлый фон для заголовков */
+    font-weight: bold;
+    color: #333;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f2f2f2; /* Чередование цвета строк */
+}
+
+tbody tr:hover {
+    background-color: #e2e6ea; /* Цвет строки при наведении */
+}
+
+tfoot td {
+    background-color: #dee2e6;
+    font-weight: bold;
+}
+
+
+/* --- Базовые стили для форм и кнопок --- */
+form {
+    margin-bottom: 15px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    width: calc(100% - 20px); /* Почти 100% ширины с учетом паддинга */
+    box-sizing: border-box; /* Учитываем паддинг и бордер в ширине */
+}
+
+button,
+input[type="submit"],
+.button { /* Класс button для ссылок, стилизованных под кнопки */
+    display: inline-block;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    text-decoration: none; /* Убираем подчеркивание для ссылок */
+    transition: background-color 0.3s ease;
+}
+
+button:hover,
+input[type="submit"]:hover,
+.button:hover {
+    background-color: #0056b3;
+}
+
+button.disabled,
+input[type="submit"].disabled,
+.button.disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Стили для ссылок, которые не кнопки */
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* --- Адаптивность (базовый пример) --- */
+@media (max-width: 768px) {
+    main {
+        padding: 0 10px; /* Меньшие отступы на маленьких экранах */
+    }
+
+    header nav a, header nav form {
+         margin: 0 8px; /* Меньшие отступы между пунктами меню */
+         font-size: 1em;
+    }
+    header h1 {
+        font-size: 1.5em;
+    }
+
+    /* Пример адаптивности для Flexbox, если используется */
+    .catalog-container {
+        flex-direction: column; /* Столбцом на маленьких экранах */
+    }
+     .catalog-tree, .selection-summary {
+        flex: none; /* Убираем flex-grow/shrink */
+        width: 100%; /* Занимаем всю ширину */
+        margin-bottom: 20px; /* Добавляем отступ между блоками */
+     }
+
+    /* Уменьшаем размер изображений в каталоге */
+    .model-image-container img {
+        max-width: 80px !important; /* Уменьшаем максимальный размер */
+        max-height: 80px !important;
+    }
+
+    /* Уменьшаем размер шрифта в таблице */
+    table, th, td {
+         font-size: 0.9em;
+    }
+}

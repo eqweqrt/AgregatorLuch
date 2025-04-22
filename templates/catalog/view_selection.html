@@ -1,0 +1,61 @@
+{% block title %}Ваш выбор{% endblock %}
+
+{% block content %}
+    <h2>Ваш выбор моделей для коммерческого предложения</h2>
+
+    {% if selected_items %}
+        <table border="1" cellpadding="10" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Наименование</th>
+                    <th>Кол-во, шт.</th>
+                    <th>Цена за единицу, руб.</th>
+                    <th>Стоимость, руб.</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in selected_items %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.model.product.name }} - {{ item.model.name }}</strong>
+                            {% if item.model.details %}
+                                <br><small>{{ item.model.details|linebreaksbr }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {# TODO: Здесь можно добавить форму для изменения количества #}
+                            {{ item.quantity }}
+                        </td>
+                        <td>{{ item.unit_price }}</td>
+                        <td>{{ item.item_total }}</td>
+                        <td>
+                            {# Форма для удаления модели #}
+                            <form action="{% url 'remove_from_selection' item.model.id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit">Удалить</button>
+                            </form>
+                            {# TODO: Кнопка или форма для уменьшения количества #}
+                            {# TODO: Кнопка или форма для увеличения количества #}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align: right;"><strong>Итого:</strong></td>
+                    <td><strong>{{ total_price }}</strong></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <p><a href="{% url 'generate_commercial_offer_pdf' %}">Сформировать PDF коммерческого предложения</a></p>
+
+    {% else %}
+        <p>Ваш выбор пуст.</p>
+    {% endif %}
+
+    <p><a href="{% url 'product_model_list' %}">Вернуться к выбору моделей</a></p>
+
+{% endblock %}

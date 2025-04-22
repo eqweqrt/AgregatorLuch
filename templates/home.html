@@ -1,0 +1,14 @@
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+    <h2>Добро пожаловать, {{ user.username }}!</h2>
+    <p>Вы успешно авторизовались.</p>
+
+    <h3>Меню:</h3>
+    <ul>
+        {# Измените эту ссылку #}
+        <li><a href="{% url 'catalog_selection' %}">Выбрать / просмотреть модели продуктов</a></li>
+        <li><a href="{% url 'logout' %}">Выйти</a></li>
+    </ul>
+
+{% endblock %}
