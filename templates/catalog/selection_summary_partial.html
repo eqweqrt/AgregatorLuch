@@ -1,0 +1,104 @@
+{# catalog/templates/catalog/selection_summary_partial.html #}
+{# Этот шаблон рендерит только содержимое блока .selection-summary-content #}
+{# Он используется для AJAX-обновления #}
+{% load static %}
+{% load custom_filters %} {# Убедитесь, что ваш custom_filters.py существует и зарегистрирован #}
+
+
+{# Отображаем сообщения, переданные из view #}
+{# Это специальный список сообщений, переданный для AJAX. #}
+{# Эти сообщения НЕ являются стандартными Django messages. #}
+{% if ajax_messages %}
+    <ul class="messages ajax-messages"> {# Добавляем класс ajax-messages для стилизации/обработки JS #}
+        {% for message_dict in ajax_messages %}
+            {# Используем mark_safe для сообщений из views, где был mark_safe #}
+            <li class="{{ message_dict.tags|default:'' }}">{{ message_dict.message|safe }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+
+{% if selected_items %}
+    <table>
+        <thead>
+            <tr>
+                <th>Наименование</th>
+                <th>Кол-во</th>
+                <th>Цена за ед.<br>(изм.)</th> {# Заголовок для редактируемой цены #}
+                <th>Сумма</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in selected_items %}
+                {# Добавляем data-model-id к tr для удобства, хотя JS сейчас его не использует активно здесь #}
+                <tr data-model-id="{{ item.model.id }}">
+                    <td>{{ item.model.product.name }} - {{ item.model.name }}</td>
+                    <td>
+                        {# Количество отображается, редактирование происходит через поля в каталоге #}
+                        {{ item.quantity }}
+                    </td>
+                    <td>
+                        {# === ПОЛЕ ДЛЯ РЕДАКТИРОВАНИЯ ЦЕНЫ === #}
+                        {# У поля только нужные атрибуты для сбора данных в JS #}
+                        <input type="number"
+                               value="{{ item.unit_price|floatformat:2 }}" {# Показываем эффективную цену (из сессии или БД) #}
+                               min="0"
+                               step="0.01" {# Шаг для десятичных дробей #}
+                               class="item-price-input" {# Класс для выбора полей в JS #}
+                               data-model-id="{{ item.model.id }}" {# ID модели для связывания цены #}
+                               style="width: 80px; text-align: right;">
+                        {# Кнопка "Сохранить" для каждой строки убрана, будет одна общая кнопка #}
+                    </td>
+                    <td class="item-total-cell">{{ item.item_total|floatformat:2 }}</td> {# Класс для удобства в JS #}
+                    <td>
+                         {# Кнопка удаления позиции целиком остается #}
+                         {# Класс ajax-update-button для обработки в JS, data-action и data-model-id для идентификации #}
+                         <button type="button" class="remove-all-button ajax-update-button small-button" data-action="remove_all" data-model-id="{{ item.model.id }}" title="Удалить позицию полностью">x</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+             <tr>
+                 <td colspan="3" style="text-align:right;"><strong>Итого:</strong></td>
+                 {# Класс для удобства в JS, чтобы найти и обновить общую сумму #}
+                 <td class="total-price-cell"><strong>{{ total_price|floatformat:2 }}</strong></td>
+                 <td></td>
+             </tr>
+        </tfoot>
+    </table>
+
+    <div class="document-buttons">
+        {# === НОВАЯ КНОПКА "Применить цены" === #}
+        {# Класс button-apply-prices для обработки в JS #}
+        <button type="button" class="button button-apply-prices">Применить цены</button>
+        {# ==================================== #}
+
+        {# Кнопка очистки всего выбора (AJAX) #}
+        {# Класс ajax-update-button для обработки в JS, data-action для идентификации #}
+        {# disabled и onclick="return false;" для неактивного состояния при пустом выборе #}
+        <button type="button" class="button button-clear ajax-update-button{% if not selected_items %} disabled{% endif %}" data-action="clear" title="Очистить весь выбор" {% if not selected_items %} onclick="return false;"{% else %} onclick="return confirm('Вы уверены, что хотите очистить весь выбор?');"{% endif %}>Очистить выбор</button>
+
+        {# Основные кнопки генерации документов (стандартные ссылки) #}
+        {# disabled и onclick="return false;" для неактивного состояния при пустом выборе #}
+        <a href="{% url 'generate_commercial_offer_docx' %}" class="button{% if not selected_items %} disabled{% endif %}" {% if not selected_items %} onclick="return false;"{% endif %}>Сформировать КП</a>
+        <a href="{% url 'generate_commercial_offer_umed_docx' %}" class="button{% if not selected_items %} disabled{% endif %}" {% if not selected_items %} onclick="return false;"{% endif %}>КП Учебный мир</a>
+        <a href="{% url 'generate_commercial_offer_pos78_docx' %}" class="button{% if not selected_items %} disabled{% endif %}" {% if not selected_items %} onclick="return false;"{% endif %}>КП ПОС78</a>
+        {# Кнопка PDF (скрыта) #}
+        {# <a href="{% url 'generate_commercial_offer_pdf' %}" class="button{% if not selected_items %} disabled{% endif %}" {% if not selected_items %} onclick="return false;"{% endif %}>Сформировать КП (PDF)</a> #}
+    </div>
+
+{% else %} {# Если выбор пуст, показываем неактивные кнопки #}
+    <p class="empty-selection-message">Ваш выбор пуст.</p>
+    <div class="document-buttons">
+         {# Неактивная кнопка применения цен #}
+         <button type="button" class="button button-apply-prices disabled" disabled>Применить цены</button>
+         {# Неактивные остальные кнопки #}
+         <button type="button" class="button button-clear ajax-update-button disabled" data-action="clear" title="Очистить весь выбор" onclick="return false;" disabled>Очистить выбор</button>
+         <a href="{% url 'generate_commercial_offer_docx' %}" class="button disabled" onclick="return false;">Сформировать КП</a>
+         <a href="{% url 'generate_commercial_offer_umed_docx' %}" class="button disabled" onclick="return false;">КП Учебный мир</a>
+         <a href="{% url 'generate_commercial_offer_pos78_docx' %}" class="button disabled" onclick="return false;">КП ПОС78</a>
+         {# <a href="{% url 'generate_commercial_offer_pdf' %}" class="button disabled" onclick="return false;">Сформировать КП (PDF)</a> #}
+    </div>
+{% endif %}

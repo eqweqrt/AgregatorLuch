@@ -7,12 +7,31 @@
 
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/catalog_style.css' %}">
+    {# Дополнительные стили для нового поля цены и сообщений AJAX #}
+    <style>
+        .item-price-input {
+            /* Стили для поля ввода цены в таблице */
+            padding: 2px 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .messages.ajax-messages {
+             margin-top: 10px;
+             margin-bottom: 10px;
+             padding-left: 20px; /* Отступ для списка */
+        }
+        .messages.ajax-messages li {
+             list-style: disc; /* Маркеры списка */
+             margin-bottom: 5px;
+        }
+         /* Стили сообщений (info, warning, error, success) уже должны быть в style.css */
+    </style>
 {% endblock %}
 
 {% block content %}
     <h2>Каталог продукции</h2>
 
-    {# Сообщения Django будут отображаться автоматически из base.html #}
+    {# Стандартные сообщения Django отображаются в base.html #}
 
     <div class="catalog-container">
 
@@ -34,24 +53,29 @@
                                         <div class="product-content collapsible collapsed">
                                             <ul class="model-list-in-product">
                                                 {% for model in models_list %}
+                                                    {# Добавляем data-model-id к li, т.к. на него может ссылаться JS #}
                                                     <li class="model-item" data-model-id="{{ model.id }}">
                                                         <h6>Модель: {{ model.name }}</h6>
-                                                        <p>Цена: {{ model.price|floatformat:2 }} руб.</p>
-                                                        <form class="selection-form ajax-update-form">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="model_id" value="{{ model.id }}">
-                                                            <label for="quantity_{{ model.id }}">Кол-во:</label>
+                                                        {# Отображаем цену из БД здесь #}
+                                                        <p>Цена (каталог): {{ model.price|floatformat:2 }} руб.</p>
+                                                        {# Форма/элементы для обновления количества #}
+                                                        <div class="quantity-controls"> {# Оборачиваем в div для удобства #}
+                                                            {% csrf_token %} {# CSRF токен нужен, если форма отправляется, но мы используем JS #}
+                                                            {# Поле количества должно быть для отправки AJAX запроса 'set' #}
+                                                             <label for="quantity_{{ model.id }}">Кол-во:</label>
+                                                             {# Получаем текущее количество из сессии. Если модель не в сессии, quantity=0 #}
                                                             <input type="number"
                                                                    id="quantity_{{ model.id }}"
                                                                    name="quantity"
-                                                                   value="{{ selection|get_item:model.id|default:0 }}"
+                                                                   value="{{ selection|get_item:model.id|get_nested_item:'quantity'|default:0 }}" {# Читаем quantity из словаря в сессии #}
                                                                    min="0"
-                                                                   class="quantity-input">
-                                                            <button type="button" class="ajax-update-button" data-action="set" title="Установить количество">OK</button>
-                                                        </form>
-                                                        <div class="quick-update-buttons">
-                                                             <button type="button" class="ajax-update-button small-button" data-action="add" data-model-id="{{ model.id }}" title="Добавить 1 шт.">+</button>
-                                                             <button type="button" class="ajax-update-button small-button" data-action="remove" data-model-id="{{ model.id }}" title="Удалить 1 шт.">-</button>
+                                                                   class="quantity-input"
+                                                                   data-model-id="{{ model.id }}"> {# Добавляем data-model-id для JS #}
+                                                            {# Кнопка OK для установки количества, отправляет action='set' #}
+                                                            <button type="button" class="ajax-update-button button-set-quantity small-button" data-action="set" data-model-id="{{ model.id }}" title="Установить количество">OK</button>
+                                                            {# Кнопки +/- для быстрого изменения количества #}
+                                                            <button type="button" class="ajax-update-button button-add-quantity small-button" data-action="add" data-model-id="{{ model.id }}" title="Добавить 1 шт.">+</button>
+                                                            <button type="button" class="ajax-update-button button-remove-quantity small-button" data-action="remove" data-model-id="{{ model.id }}" title="Удалить 1 шт.">-</button>
                                                         </div>
                                                         {% if model.details %}
                                                              <div class="model-details"><h6>Описание:</h6><p>{{ model.details|linebreaksbr }}</p></div>
@@ -75,81 +99,12 @@
         {# --- Блок с текущим выбором и кнопками генерации документов --- #}
         <div class="selection-summary">
             <h3>Ваш выбор</h3>
-            <div class="selection-summary-content"> {# Контейнер для AJAX обновления summary #}
-                {% if selected_items %}
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Наименование</th>
-                                <th>Кол-во</th>
-                                <th>Цена за ед.</th>
-                                <th>Сумма</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in selected_items %}
-                                <tr data-model-id="{{ item.model.id }}">
-                                    <td>{{ item.model.product.name }} - {{ item.model.name }}</td>
-                                    <td>{{ item.quantity }}</td>
-                                    <td>{{ item.unit_price|floatformat:2 }}</td>
-                                    <td>{{ item.item_total|floatformat:2 }}</td>
-                                    <td>
-                                         <button type="button" class="remove-all-button ajax-update-button small-button" data-action="remove_all" data-model-id="{{ item.model.id }}" title="Удалить позицию полностью">x</button>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot>
-                             <tr>
-                                 <td colspan="3" style="text-align:right;"><strong>Итого:</strong></td>
-                                 <td class="total-price-cell"><strong>{{ total_price|floatformat:2 }}</strong></td>
-                                 <td></td>
-                             </tr>
-                        </tfoot>
-                    </table>
-
-                    {# === ИЗМЕНЕНО: ДОБАВЛЕНЫ НОВЫЕ КНОПКИ === #}
-                    <div class="document-buttons">
-                        {# Кнопка очистки всего выбора (AJAX) #}
-                        <button type="button" class="button button-clear ajax-update-button" data-action="clear" title="Очистить весь выбор" onclick="return confirm('Вы уверены, что хотите очистить весь выбор?');">Очистить выбор</button>
-
-                        {# Основная кнопка КП (стандартная ссылка) #}
-                        <a href="{% url 'generate_commercial_offer_docx' %}" class="button">Сформировать КП</a> {# Возможно, переименовать "КП (DOCX)" в просто "КП" или "КП (Основной)" #}
-
-                        {# НОВАЯ КНОПКА для КП Учебный мир #}
-                        <a href="{% url 'generate_commercial_offer_umed_docx' %}" class="button">КП Учебный мир</a>
-
-                        {# НОВАЯ КНОПКА для КП ПОС78 #}
-                        <a href="{% url 'generate_commercial_offer_pos78_docx' %}" class="button">КП ПОС78</a>
-
-                        {# Кнопка PDF (скрыта) #}
-                        {# <a href="{% url 'generate_commercial_offer_pdf' %}" class="button">Сформировать КП (PDF)</a> #}
-                    </div>
-                    {# ==================================== #}
-
-                {% else %} {# Если выбор пуст #}
-                    <p class="empty-selection-message">Ваш выбор пуст.</p>
-                    {# === ИЗМЕНЕНО: ДОБАВЛЕНЫ НОВЫЕ КНОПКИ (НЕАКТИВНЫЕ) === #}
-                    <div class="document-buttons">
-                         {# Неактивная кнопка очистки (AJAX) #}
-                         <button type="button" class="button button-clear ajax-update-button disabled" data-action="clear" title="Очистить весь выбор" onclick="return false;">Очистить выбор</button>
-
-                         {# Неактивная основная кнопка КП (стандартная ссылка) #}
-                         <a href="{% url 'generate_commercial_offer_docx' %}" class="button disabled" onclick="return false;">Сформировать КП</a>
-
-                         {# Неактивная НОВАЯ КНОПКА для КП Учебный мир #}
-                         <a href="{% url 'generate_commercial_offer_umed_docx' %}" class="button disabled" onclick="return false;">КП Учебный мир</a>
-
-                         {# Неактивная НОВАЯ КНОПКА для КП ПОС78 #}
-                         <a href="{% url 'generate_commercial_offer_pos78_docx' %}" class="button disabled" onclick="return false;">КП ПОС78</a>
-
-                         {# Неактивная кнопка PDF (скрыта) #}
-                         {# <a href="{% url 'generate_commercial_offer_pdf' %}" class="button disabled" onclick="return false;">Сформировать КП (PDF)</a> #}
-                    </div>
-                    {# ============================================= #}
-                {% endif %}
-             </div>
+            {# Этот div будет обновляться AJAX-ом #}
+            <div class="selection-summary-content">
+                {# Начальное содержимое будет загружено при рендеринге страницы #}
+                {# Внутри этого блока будет таблица, кнопки и сообщения AJAX #}
+                {% include 'catalog/selection_summary_partial.html' with selected_items=selected_items total_price=total_price selection=selection %}
+            </div>
         </div>
 
     </div> {# Конец div.catalog-container #}
@@ -157,10 +112,8 @@
     {# Передаем URL из Django в JavaScript - ДОЛЖЕН БЫТЬ ДО catalog_script.js #}
     <script>
         const UPDATE_SELECTION_URL = "{% url 'update_selection' %}";
-        const CATALOG_SELECTION_URL = "{% url 'catalog_selection' %}";
-        // Можно добавить URL'ы генерации документов, если они нужны в JS по какой-то причине,
-        // но сейчас они используются напрямую в href ссылок.
-        // const GENERATE_DOCX_URL = "{% url 'generate_commercial_offer_docx' %}";
+        const CATALOG_SELECTION_URL = "{% url 'catalog_selection' %}"; // Может быть не нужен
+        const CSRF_TOKEN = "{{ csrf_token }}"; // Передаем CSRF токен для AJAX POST запросов
     </script>
 
     {# Подключаем ваш JavaScript файл #}
