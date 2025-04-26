@@ -74,8 +74,8 @@
                                                             {# Кнопка OK для установки количества, отправляет action='set' #}
                                                             <button type="button" class="ajax-update-button button-set-quantity small-button" data-action="set" data-model-id="{{ model.id }}" title="Установить количество">OK</button>
                                                             {# Кнопки +/- для быстрого изменения количества #}
-                                                            <button type="button" class="ajax-update-button button-add-quantity small-button" data-action="add" data-model-id="{{ model.id }}" title="Добавить 1 шт.">+</button>
-                                                            <button type="button" class="ajax-update-button button-remove-quantity small-button" data-action="remove" data-model-id="{{ model.id }}" title="Удалить 1 шт.">-</button>
+                                                            {# <button type="button" class="ajax-update-button button-add-quantity small-button" data-action="add" data-model-id="{{ model.id }}" title="Добавить 1 шт.">+</button> #}
+                                                            {# <button type="button" class="ajax-update-button button-remove-quantity small-button" data-action="remove" data-model-id="{{ model.id }}" title="Удалить 1 шт.">-</button> #}
                                                         </div>
                                                         {% if model.details %}
                                                              <div class="model-details"><h6>Описание:</h6><p>{{ model.details|linebreaksbr }}</p></div>

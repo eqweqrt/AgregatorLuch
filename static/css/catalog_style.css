@@ -15,85 +15,80 @@
 
 /* Блок с деревом каталога */
 .catalog-tree {
-    /* ИЗМЕНЕНО: flex: 1; */
-    /* Каталог занимает 1 часть доступного "лишнего" пространства */
-    flex: 1;
+    flex: 1; /* Каталог занимает 1 часть доступного "лишнего" пространства */
     min-width: 300px; /* Минимальная ширина блока, чтобы он не сжимался слишком сильно */
-    border: 1px solid #ccc; /* Рамка */
+    border: 1px solid #ccc; /* Рамка (оставляем серую) */
     padding: 15px; /* Внутренние отступы */
     border-radius: 5px; /* Скругление углов */
-    background-color: white; /* Белый фон */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Легкая тень */
+    background-color: white; /* Белый фон (оставляем) */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Легкая тень (оставляем) */
 }
 
 /* Блок с выбранными товарами (summary) */
 .selection-summary {
-    /* ИЗМЕНЕНО: flex: 1.5; */
-    /* Выбор занимает 1.5 части доступного "лишнего" пространства, делая его шире Каталога */
-    flex: 1.5;
+    flex: 1.5; /* Выбор занимает 1.5 части доступного "лишнего" пространства, делая его шире Каталога */
      min-width: 300px; /* Минимальная ширина блока */
-    border: 1px solid #ccc;
+    border: 1px solid #ccc; /* Рамка (оставляем серую) */
     padding: 15px;
     border-radius: 5px;
-    background-color: #f9f9f9; /* Светло-серый фон */
-     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Легкая тень */
+    background-color: #f9f9f9; /* Светло-серый фон (оставляем) */
+     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Легкая тень (оставляем) */
 }
 
 
 /* --- Стили иерархического списка (дерева) --- */
 .catalog-tree ul {
-    list-style: none; /* Убираем стандартные маркеры списка (точки, цифры) */
-    padding-left: 0; /* Убираем стандартный левый отступ у ul */
-    margin: 0; /* Убираем стандартный верхний margin, он есть у h3 */
+    list-style: none; /* Убираем стандартные маркеры списка */
+    padding-left: 0; /* Убираем стандартный левый отступ */
+    margin: 0; /* Убираем стандартный верхний margin */
 }
 
 .catalog-tree li {
-    margin-bottom: 5px; /* Небольшой отступ между пунктами списка */
-    /* Базовый отступ для элементов верхнего уровня */
+    margin-bottom: 5px; /* Небольшой отступ */
 }
 
 /* Стиль для элемента категории (li) - верхний уровень вложенности */
 .category-item {
-    margin-top: 10px; /* Отступ между категориями для лучшей читаемости */
+    margin-top: 10px; /* Отступ между категориями */
 }
 
 /* === Стили для переключателя КАТЕГОРИИ (иконка + текст) === */
-/* Применяем display: inline-block и vertical-align для выравнивания стрелки и текста */
 .category-item > .toggle-icon,
-.category-item > .toggle-text.category-name { /* Уточняем селектор для текста */
+.category-item > .toggle-text.category-name {
     display: inline-block;
-    cursor: pointer; /* Указатель мыши меняется при наведении */
-    vertical-align: middle; /* Выравнивание элементов по средней линии */
+    cursor: pointer;
+    vertical-align: middle;
 }
 
 .category-item > .toggle-icon {
-    width: 1em; /* Фиксированная ширина для иконки (равна размеру шрифта родителя) */
-    transition: transform 0.2s ease; /* Плавный поворот стрелки */
-    margin-right: 5px; /* Отступ справа от стрелки до текста */
-    /* Сам символ ► уже в HTML, стили ниже управляют его видом */
-    color: #0056b3; /* Цвет стрелки как у названия категории */
-    font-weight: bold; /* Делаем стрелку жирной */
+    width: 1em;
+    transition: transform 0.2s ease;
+    margin-right: 5px;
+    /* ИЗМЕНЕНО: Цвет стрелки категории на корпоративный */
+    color: #9169e3; /* Корпоративный цвет HEX 9169e3 */
+    font-weight: bold;
 }
 /* Поворот стрелки при разворачивании */
 .category-item > .toggle-icon.expanded {
-    transform: rotate(90deg); /* Поворот на 90 градусов */
+    transform: rotate(90deg);
 }
 
 .category-item > .toggle-text.category-name {
-    font-weight: bold; /* Название категории жирным */
-    color: #0056b3; /* Цвет для названий категорий */
+    font-weight: bold;
+    /* ИЗМЕНЕНО: Цвет названий категорий на корпоративный */
+    color: #9169e3; /* Корпоративный цвет HEX 9169e3 */
 }
 /* ======================================================== */
 
 /* Стиль для скрытия содержимого категории (блока div.category-content) */
 .category-content.collapsible.collapsed {
-    display: none; /* Полностью скрывает блок и его содержимое */
+    display: none;
 }
 
 /* Отступы и линии для вложенных уровней ВНУТРИ развернутой категории */
 .category-content {
      padding-left: 20px; /* Отступ слева для вложенных списков продуктов */
-     border-left: 1px solid #eee; /* Визуальная линия для иерархии */
+     border-left: 1px solid #eee; /* Визуальная линия (оставляем серую) */
      margin-top: 5px; /* Отступ сверху */
 }
 
@@ -109,14 +104,14 @@
     margin-top: 8px; /* Отступ между продуктами в категории */
     /* Стили для вложенности продукта */
      margin-left: 15px; /* Отступ для вложенности продукта */
-     border-left: 1px solid #eee; /* Линия для вложенности продукта */
+     border-left: 1px solid #eee; /* Линия для вложенности продукта (оставляем серую) */
      padding-left: 10px; /* Отступ после линии */
 }
 
 /* === Стили для переключателя ПРОДУКТА (иконка + текст) === */
 /* Аналогично стилям переключателя категории */
 .product-item > .toggle-icon,
-.product-item > .toggle-text.product-name { /* Уточняем селектор для текста */
+.product-item > .toggle-text.product-name {
      display: inline-block;
      cursor: pointer;
      vertical-align: middle;
@@ -126,8 +121,9 @@
     width: 1em;
     transition: transform 0.2s ease;
     margin-right: 5px;
-    color: #007bff; /* Цвет стрелки как у названия продукта */
-    font-weight: bold; /* Делаем стрелку жирной */
+    /* ИЗМЕНЕНО: Цвет стрелки продукта на корпоративный */
+    color: #9169e3; /* Корпоративный цвет HEX 9169e3 */
+    font-weight: bold;
 }
 /* Поворот стрелки при разворачивании */
 .product-item > .toggle-icon.expanded {
@@ -136,7 +132,8 @@
 
 .product-item > .toggle-text.product-name {
      font-weight: bold;
-     color: #007bff; /* Цвет для названий продуктов */
+     /* ИЗМЕНЕНО: Цвет названий продуктов на корпоративный */
+     color: #9169e3; /* Корпоративный цвет HEX 9169e3 */
 }
 /* ========================================================= */
 
@@ -156,6 +153,7 @@
 
 
 /* Стиль для элемента модели (li) - третий уровень вложенности */
+/* Цвет рамки, фона, текста названия/цены модели оставляем нейтральными */
 .model-item {
     border: 1px solid #ddd; /* Более тонкая рамка для модели */
     margin-top: 8px; /* Отступ между моделями */
@@ -170,62 +168,83 @@
     margin-top: 0;
     margin-bottom: 3px;
     font-size: 1em;
-    color: #333;
+    color: #333; /* Оставляем темный */
 }
 .model-item p {
     margin: 0 0 5px 0;
     font-size: 0.95em;
-    color: #555;
+    color: #555; /* Оставляем серый */
 }
+
+/* --- Стили для изображения модели в каталоге --- */
+/* === ЭТО ПРАВИЛО ОТВЕЧАЕТ ЗА РАЗМЕР ИЗОБРАЖЕНИЯ В КАТАЛОГЕ === */
+.model-image-container img {
+     display: block; /* Изображение как отдельный блок */
+     /* ИЗМЕНЕНО: Устанавливаем максимальный размер 100x100px с !important */
+     max-width: 100px !important; /* Максимальная ширина изображения */
+     max-height: 100px !important; /* Максимальная высота изображения */
+     width: auto; /* Не принуждаем к конкретной ширине */
+     height: auto; /* Сохраняем пропорции изображения */
+     margin: 5px auto; /* Центрируем изображение внутри контейнера */
+     border: 1px solid #ddd; /* Легкая рамка */
+     padding: 3px; /* Внутренний отступ вокруг изображения */
+     background-color: white;
+     box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Легкая тень */
+}
+/* =========================================================== */
 
 
 /* --- Стили для формы выбора количества в элементе модели --- */
-/* Размещаем элементы формы в строку */
-.model-item .selection-form {
-    display: flex; /* Включает Flexbox */
-    align-items: center; /* Выравнивает элементы по вертикали */
-    gap: 5px; /* Промежуток между элементами формы */
+.model-item .quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
     margin-top: 10px;
     margin-bottom: 5px;
 }
 
-.selection-form label {
-    margin-right: 0; /* Убираем стандартный margin-right, т.к. есть gap */
-    flex-shrink: 0; /* Запрещаем сжимать лейбл */
-    font-size: 0.9em; /* Меньше шрифт у лейбла */
+.quantity-controls label {
+    margin-right: 0;
+    flex-shrink: 0;
+    font-size: 0.9em;
 }
 
-.selection-form input[type="number"] {
-     width: 60px; /* Фиксированная ширина для поля ввода числа */
-     padding: 5px; /* Увеличим паддинг для удобства */
+.quantity-controls input[type="number"] {
+     width: 60px;
+     padding: 5px;
      border: 1px solid #ccc;
      border-radius: 3px;
-     box-sizing: border-box; /* Включаем паддинг и рамку в общую ширину */
-     text-align: center; /* Выравнивание текста по центру */
-     font-size: 0.9em; /* Меньше шрифт */
+     box-sizing: border-box;
+     text-align: center;
+     font-size: 0.9em;
+     vertical-align: middle;
+     line-height: normal;
 }
 
-/* Переопределяем общие стили кнопок (из style.css) для маленьких кнопок в форме */
-.selection-form button { /* Стили для кнопки OK */
-    padding: 5px 10px;
+.quantity-controls .button-set-quantity {
+    padding: 6px 10px;
     font-size: 0.9em;
-    background-color: #007bff; /* Вернем синий цвет для OK кнопки */
+    background-color: #9169e3;
     color: white;
     border: none;
     border-radius: 3px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    vertical-align: middle;
+    line-height: normal;
+    box-sizing: border-box;
 }
 
-.selection-form button:hover {
-    background-color: #0056b3;
+.quantity-controls .button-set-quantity:hover {
+    background-color: #7c57c7;
 }
 
-/* --- Стили для новых маленьких кнопок (+, -, удалить в summary) --- */
+/* --- Стили для маленьких кнопок в summary (+, -, удалить "x") --- */
+/* Эти стили применяются к кнопке удаления в summary */
 .small-button {
-    padding: 3px 6px; /* Меньший паддинг */
-    font-size: 0.8em; /* Меньший шрифт */
-    background-color: #6c757d; /* Серый цвет */
+    padding: 3px 6px;
+    font-size: 0.8em;
+    background-color: #6c757d; /* Серый цвет (оставляем) */
     color: white;
     border: none;
     border-radius: 3px;
@@ -234,23 +253,16 @@
 }
 
 .small-button:hover {
-    background-color: #5a6268;
-}
-
-/* Стили для контейнера маленьких кнопок + / - */
-.quick-update-buttons {
-     display: flex; /* Используем flexbox для размещения + и - рядом */
-     gap: 5px; /* Промежуток между кнопками */
-     margin-top: 5px;
+    background-color: #5a6268; /* Темнее серый (оставляем) */
 }
 
 
 /* Стили для кнопки "Удалить" в таблице выбора summary (маленькая кнопка "x") */
+/* Этот стиль переопределяет .small-button для кнопки удаления */
 .selection-summary .remove-all-button {
-    /* Убираем padding и font-size, они заданы в .small-button */
-    /* padding: 4px 8px; */
-    /* font-size: 0.8em; */
-    background-color: #dc3545; /* Красный цвет */
+    padding: 4px 8px;
+    font-size: 0.8em;
+    background-color: #dc3545; /* Красный цвет (оставляем по запросу) */
     color: white;
     border: none;
     border-radius: 3px;
@@ -259,178 +271,161 @@
 }
 
 .selection-summary .remove-all-button:hover {
-    background-color: #c82333;
+    background-color: #c82333; /* Темнее красный (оставляем) */
 }
 
 
-/* --- Стили для кнопок генерации документов и очистки --- */
-/* ... (ваш существующий код, убедитесь, что стили button-clear тоже есть) ... */
+/* --- Стили для кнопок генерации документов и очистки в summary --- */
+/* Эти стили унаследуют базовые стили кнопок из style.css (.button) */
+/* Поскольку .button в style.css уже перекрашен, эти кнопки тоже станут корпоративного цвета */
+.selection-summary .document-buttons {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee; /* Линия сверху (оставляем серую) */
+    /* ИЗМЕНЕНО: Выравнивание содержимого по правому краю */
+    text-align: right; /* Этот стиль заставит строчно-блочные дочерние элементы выравниваться справа */
+}
 
-/* Применяем стиль disabled к AJAX кнопкам */
+/* Добавляем стили для рядов кнопок */
+.selection-summary .button-row {
+    /* text-align: right; /* Наследуется от родителя */
+    margin-bottom: 10px; /* Отступ между рядами */
+    /* display: block; /* div по умолчанию блочный */
+}
+
+/* Убираем нижний отступ у последнего ряда */
+.selection-summary .button-row:last-child {
+    margin-bottom: 0;
+}
+
+
+/* Применяем общие стили кнопок, унаследованные от .button */
+/* Добавляем отступ между кнопками внутри одного ряда */
+.selection-summary .document-buttons .button,
+.selection-summary .document-buttons button {
+    /* Ваши существующие стили padding, font-size и т.д. */
+    /* padding: 10px 20px; (наследуется от .button) */
+    /* font-size: 1em; (наследуется от .button) */
+    /* background-color: #9169e3; (наследуется от .button) */
+    /* color: white; (наследуется от .button) */
+    /* border: none; (наследуется от .button) */
+    /* border-radius: 4px; (наследуется от .button) */
+
+    /* Добавляем отступ слева дляSpacing между кнопками */
+    margin-left: 10px;
+}
+
+/* Убираем margin-left у первой кнопки в ряду, чтобы она не имела отступа от правого края */
+/* Используем комбинированный селектор для надежности */
+.selection-summary .button-row .button:first-child,
+.selection-summary .button-row button:first-child,
+.selection-summary .button-row a.button:first-child {
+    margin-left: 0;
+}
+
+
+/* Применяем стиль disabled к AJAX кнопкам, включая те, что внутри рядов */
 button.ajax-update-button.disabled {
     background-color: #cccccc;
     cursor: not-allowed;
     opacity: 0.7;
 }
 
-/* --- Стили для описания и изображения модели в каталоге --- */
-.model-details {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed #eee; /* Пунктирная линия над деталями */
-}
-
-.model-details h6 {
-    margin-top: 0;
-    margin-bottom: 5px;
-    font-size: 1em; /* Увеличим размер шрифта */
-    font-style: italic; /* Курсивное начертание */
-    color: #555;
-    font-weight: normal; /* Сделаем не жирным */
-}
-.model-details p {
-    margin: 0; /* Убираем маргины по умолчанию */
-    font-size: 0.95em;
-    color: #333;
-    white-space: pre-wrap; /* Сохраняем переносы строк из linebreaksbr */
-    word-wrap: break-word; /* Перенос длинных слов (устаревший) */
-    overflow-wrap: break-word; /* Перенос длинных слов (современный) */
-}
-
-.model-image-container {
-    margin-top: 10px;
-    text-align: center; /* Центрируем изображение */
-}
-
-.model-image-container img {
-     max-width: 120px; /* Максимальная ширина изображения */
-     max-height: 120px; /* Максимальная высота изображения */
-     height: auto; /* Сохраняем пропорции изображения */
-     border: 1px solid #ddd; /* Легкая рамка */
-     padding: 3px; /* Внутренний отступ вокруг изображения */
-     background-color: white;
-     box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Легкая тень */
+/* Применяем стиль disabled к ссылкам-кнопкам */
+a.button.disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+    pointer-events: none; /* Добавляем, чтобы ссылки точно не были кликабельны */
 }
 
 
-/* --- Стили для таблицы выбора в summary блоке --- */
+/* ============================================================== */
+/* Стили для таблицы выбора в summary блоке */
+/* ============================================================== */
 /* Таблица в summary блоке унаследует базовые стили из style.css. */
 /* Ниже - специфические переопределения. */
+/* Цвета таблицы (бордеры, фон заголовков/футера, чередование строк) оставляем нейтральными */
 .selection-summary table {
-    width: 100%; /* Таблица занимает всю ширину родительского блока */
-    border-collapse: collapse; /* Убираем двойные границы */
-    margin-top: 10px; /* Отступ сверху */
-    font-size: 0.95em; /* Чуть меньше шрифт таблицы */
-    table-layout: fixed; /* Фиксированный макет: ширина колонок определяется TH в первой строке */
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.95em;
+    table-layout: fixed;
 }
 
 .selection-summary th,
 .selection-summary td {
-    padding: 8px; /* Внутренние отступы ячеек */
-    border: 1px solid #ddd; /* Границы ячеек */
-    text-align: left; /* Выравнивание текста по левому краю по умолчанию */
-    /* Свойства для скрытия/переноса содержимого, если оно не помещается в фиксированную ширину колонки */
-    overflow: hidden; /* Скрывает содержимое, выходящее за границы ячейки */
-    text-overflow: ellipsis; /* Добавляет многоточие (...) в конце текста, который был обрезан */
-    word-wrap: break-word; /* Позволяет длинным словам переноситься на новую строку */
-    overflow-wrap: break-word; /* Современный аналог word-wrap */
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .selection-summary th {
-    background-color: #e9ecef; /* Светлый фон для заголовков */
-    font-weight: bold; /* Жирный шрифт для заголовков */
-    color: #333; /* Цвет текста */
+    background-color: #e9ecef;
+    font-weight: bold;
+    color: #333;
 }
 
-/* Задаем процентные ширины для колонок в заголовке таблицы (TH).
-   Эти ширины будут использоваться для ВСЕХ строк таблицы благодаря table-layout: fixed;
-   Сумма процентов должна быть 100%.
-*/
-.selection-summary th:nth-child(1) { width: 45%; } /* Первая колонка: Наименование / Описание / Изображение */
+/* Задаем процентные ширины для колонок в заголовке таблицы (TH). */
+/* ИЗМЕНЕНО: Уменьшена ширина колонки "Сумма", увеличена ширина "Наименование" */
+.selection-summary th:nth-child(1) { width: 50%; } /* Первая колонка: Наименование / Описание / Изображение (Увеличена) */
 .selection-summary th:nth-child(2) { width: 10%; text-align: center; } /* Вторая колонка: Кол-во */
 .selection-summary th:nth-child(3) { width: 20%; text-align: right; } /* Третья колонка: Цена за ед */
-.selection-summary th:nth-child(4) { width: 20%; text-align: right; } /* Четвертая колонка: Сумма */
+.selection-summary th:nth-child(4) { width: 15%; text-align: right; } /* Четвертая колонка: Сумма (Уменьшена) */
 .selection-summary th:nth-child(5) { width: 5%; text-align: center; } /* Пятая колонка: Действия (кнопка удаления) */
 
 
 /* Корректируем выравнивание текста для ячеек тела таблицы (TD), если нужно */
-/* (Можно унаследовать от TH, но явное указание безопаснее) */
-.selection-summary td:nth-child(1) { text-align: left; } /* Наименование */
-.selection-summary td:nth-child(2) { text-align: center; } /* Кол-во */
-.selection-summary td:nth-child(3) { text-align: right; } /* Цена за ед */
-.selection-summary td:nth-child(4) { text-align: right; } /* Сумма */
-.selection-summary td:nth-child(5) { text-align: center; } /* Действия */
+.selection-summary td:nth-child(1) { text-align: left; }
+.selection-summary td:nth-child(2) { text-align: center; }
+.selection-summary td:nth-child(3) { text-align: right; }
+.selection-summary td:nth-child(4) { text-align: right; }
+.selection-summary td:nth-child(5) { text-align: center; }
 
 
 /* Убедимся, что элементы внутри первой ячейки TD не выталкивают ее */
-/* Делаем их блочными элементами, чтобы они занимали свою строку и уважали ширину родителя */
 .selection-summary td:nth-child(1) strong {
-     display: block; /* Название продукта/модели как отдельный блок */
-     margin-bottom: 5px; /* Отступ снизу */
+     display: block;
+     margin-bottom: 5px;
 }
 .selection-summary td:nth-child(1) .product-description {
-     display: block; /* Описание как отдельный блок */
-     margin-top: 5px; /* Отступ сверху */
-     font-style: italic; /* Курсив */
-     font-size: 0.9em; /* Чуть меньше шрифт */
-     color: #555;
+     display: block;
+     margin-top: 5px;
+     font-style: italic;
+     font-size: 0.9em;
+     color: #555; /* Оставляем серый */
 }
+/* === ЭТО ПРАВИЛО ОТВЕЧАЕТ ЗА РАЗМЕР ИЗОБРАЖЕНИЯ В ТАБЛИЦЕ СВОДКИ === */
 .selection-summary td:nth-child(1) .product-image {
-     display: block; /* Изображение как отдельный блок */
-     max-width: 100%; /* Изображение не должно быть шире своей ячейки */
+     display: block;
+     max-width: 100%; /* Оставляем 100%, чтобы изображение не вылазило из ячейки таблицы */
      height: auto; /* Сохраняем пропорции */
-     margin: 5px auto; /* Центрируем изображение внутри ячейки по горизонтали */
-     /* Можно добавить легкую рамку или тень, как у изображений в каталоге */
+     margin: 5px auto;
      border: 1px solid #ddd;
      padding: 3px;
      background-color: white;
      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
+/* ================================================================= */
 
 
 tfoot td {
-    background-color: #dee2e6; /* Фон для футера таблицы */
-    font-weight: bold; /* Жирный шрифт */
+    background-color: #dee2e6;
+    font-weight: bold;
 }
 /* Выравнивание текста в ячейке "Итого:" по правому краю */
 .selection-summary tfoot td:first-child {
     text-align: right;
 }
 /* Выравнивание текста в ячейке с общей суммой по правому краю */
-.selection-summary tfoot td:nth-child(2) { /* Если используем colspan=3 для "Итого:" */
+.selection-summary tfoot td:nth-child(2) {
      text-align: right;
 }
-
-
-/* Стили для кнопки "Удалить" в таблице выбора summary (маленькая кнопка "x") */
-.selection-summary .remove-all-button {
-    padding: 4px 8px; /* Маленький внутренний отступ */
-    font-size: 0.8em; /* Маленький шрифт */
-    background-color: #dc3545; /* Красный цвет */
-    color: white; /* Белый текст */
-    border: none; /* Убираем рамку */
-    border-radius: 3px; /* Скругление углов */
-    cursor: pointer; /* Указатель мыши меняется */
-    transition: background-color 0.3s ease; /* Плавное изменение цвета при наведении */
-}
-
-.selection-summary .remove-all-button:hover {
-    background-color: #c82333; /* Темнее при наведении */
-}
-
-
-/* --- Стили для кнопок генерации документов и очистки --- */
-/* Эти стили унаследуют базовые стили кнопок из style.css (.button) */
-.selection-summary .document-buttons {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid #eee; /* Линия сверху */
-    text-align: center; /* Центрируем кнопки */
-}
-
-/* Стили для кнопки очистки, если она нужна */
-/* Класс .button-clear используется вместе с базовым классом .button */
-/* .selection-summary .button-clear { ... } */
 
 
 /* ============================================================== */
@@ -439,17 +434,14 @@ tfoot td {
 @media (max-width: 992px) {
     /* На экранах меньше 992px, возможно, уже полезно перестроить Flexbox в колонку */
     .catalog-container {
-        flex-direction: column; /* Элементы располагаются один под другим */
-        gap: 15px; /* Меньший промежуток между блоками */
+        flex-direction: column;
+        gap: 15px;
     }
      .catalog-tree, .selection-summary {
-        flex: none; /* Сбрасываем flex-grow/shrink, чтобы они занимали всю ширину */
-        width: 100%; /* Занимаем всю доступную ширину */
-        min-width: auto; /* Сбрасываем минимальную ширину */
-        /* margin-bottom: 15px; Уgap уже добавляет отступ */
+        flex: none;
+        width: 100%;
+        min-width: auto;
      }
-
-     /* Уменьшаем паддинги на меньших экранах */
     .catalog-tree, .selection-summary {
         padding: 10px;
     }
@@ -457,7 +449,6 @@ tfoot td {
         padding: 8px;
     }
 
-    /* Уменьшаем размер шрифта в таблице выбора */
     .selection-summary table,
     .selection-summary th,
     .selection-summary td {
@@ -466,47 +457,73 @@ tfoot td {
     }
 
      /* Уменьшаем размер маленьких кнопок в формах */
-    .selection-form button,
+    .quantity-controls .button-set-quantity,
     .selection-summary .remove-all-button {
          padding: 3px 6px;
          font-size: 0.75em;
     }
 
-    /* Уменьшаем размер изображений модели */
+    /* === АДАПТИВНОЕ ПРАВИЛО ДЛЯ ИЗОБРАЖЕНИЯ МОДЕЛИ В КАТАЛОГЕ === */
     .model-image-container img {
-        max-width: 80px; /* Уменьшаем максимальный размер */
-        max-height: 80px;
+         max-width: 80px !important; /* Максимальная ширина изображения */
+         max-height: 80px !important; /* Максимальная высота изображения */
+         width: auto; /* Не принуждаем к конкретной ширине */
+         height: auto; /* Сохраняем пропорции изображения */
+         border: 1px solid #ddd;
+         padding: 3px;
+         background-color: white;
+         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
+    /* ========================================================= */
+
 
     /* Уменьшаем размеры основных кнопок */
     .selection-summary .document-buttons .button,
     .selection-summary .document-buttons button {
         padding: 6px 12px;
         font-size: 0.9em;
+        /* ИЗМЕНЕНО: Отступ между кнопками на маленьких экранах */
+        margin-left: 8px;
     }
+     /* Убираем margin-left у первой кнопки в ряду в этом медиа-запросе */
+    .selection-summary .button-row .button:first-child,
+    .selection-summary .button-row button:first-child,
+    .selection-summary .button-row a.button:first-child {
+        margin-left: 0;
+    }
+
 }
 
 @media (max-width: 576px) {
-    /* Дальнейшие корректировки для очень маленьких экранов (телефоны) */
     main {
-        padding: 0 10px; /* Меньшие отступы по бокам */
+        padding: 0 10px;
     }
     header, footer {
-         padding: 10px; /* Меньший паддинг в шапке/подвале */
-    }
+         padding: 10px;
+     }
      header h1 {
-        font-size: 1.4em; /* Меньший заголовок */
+        font-size: 1.4em;
      }
      header nav a, header nav form {
-         margin: 0 5px; /* Меньшие отступы в меню */
+         margin: 0 5px;
          font-size: 1em;
      }
 
-    /* Возможно, еще уменьшить шрифты или паддинги в таблице выбора */
     .selection-summary table,
     .selection-summary th,
     .selection-summary td {
          font-size: 0.8em;
          padding: 5px;
+    }
+    /* ИЗМЕНЕНО: Отступ между кнопками на очень маленьких экранах */
+    .selection-summary .document-buttons .button,
+    .selection-summary .document-buttons button {
+         margin-left: 5px;
+    }
+    /* Убираем margin-left у первой кнопки в ряду в этом медиа-запросе */
+    .selection-summary .button-row .button:first-child,
+    .selection-summary .button-row button:first-child,
+    .selection-summary .button-row a.button:first-child {
+        margin-left: 0;
     }
 }

@@ -18,13 +18,15 @@ main {
 }
 
 h1, h2, h3 {
-    color: #0056b3; /* Цвет заголовков */
+    /* ИЗМЕНЕНО: Цвет заголовков на корпоративный */
+    color: #9169e3; /* Корпоративный цвет HEX 9169e3 */
     margin-bottom: 15px;
 }
 
 /* --- Стили для шапки (header) --- */
 header {
-    background-color: #007bff; /* Основной цвет шапки */
+    /* ИЗМЕНЕНО: Основной цвет шапки на корпоративный */
+    background-color: #9169e3; /* Корпоративный цвет HEX 9169e3 */
     color: white;
     padding: 10px 20px;
     text-align: center;
@@ -32,7 +34,7 @@ header {
 }
 
 header h1 {
-    color: white; /* Заголовок в шапке белым */
+    color: white; /* Заголовок в шапке белым (оставляем) */
     margin: 0;
     font-size: 1.8em;
 }
@@ -42,7 +44,7 @@ header nav {
 }
 
 header nav a {
-    color: white;
+    color: white; /* Ссылки в шапке белым (оставляем) */
     text-decoration: none;
     margin: 0 15px;
     font-size: 1.1em;
@@ -50,7 +52,7 @@ header nav a {
 }
 
 header nav a:hover {
-    color: #e9ecef; /* Цвет при наведении */
+    color: #e9ecef; /* Цвет при наведении (оставляем светлый) */
 }
 
 /* Стиль для формы выхода в шапке */
@@ -62,7 +64,7 @@ header nav form {
 header nav form button {
      border: none;
      background: none;
-     color: white; /* Цвет кнопки как у ссылок */
+     color: white; /* Цвет кнопки выхода как у ссылок (оставляем) */
      cursor: pointer;
      padding: 0;
      font-size: 1.1em;
@@ -70,7 +72,7 @@ header nav form button {
 }
 
 header nav form button:hover {
-    color: #e9ecef;
+    color: #e9ecef; /* Цвет при наведении (оставляем светлый) */
     text-decoration: underline; /* Подчеркивание при наведении */
 }
 
@@ -80,14 +82,15 @@ footer {
     text-align: center;
     padding: 15px 20px;
     margin-top: 40px;
-    color: #777; /* Серый цвет текста */
+    color: #777; /* Серый цвет текста (оставляем) */
     font-size: 0.9em;
-    border-top: 1px solid #eee; /* Линия сверху */
-    background-color: #f2f2f2;
+    border-top: 1px solid #eee; /* Линия сверху (оставляем серую) */
+    background-color: #f2f2f2; /* Фон (оставляем серый) */
 }
 
 
 /* --- Стили для сообщений Django (messages) --- */
+/* Цвета сообщений (success, error, warning, info) оставляем стандартными */
 .messages {
     list-style: none;
     padding: 10px;
@@ -128,6 +131,7 @@ footer {
 
 
 /* --- Базовые стили для таблиц --- */
+/* Цвета таблицы (бордеры, фон заголовков/футера, чередование строк) оставляем нейтральными */
 table {
     width: 100%;
     border-collapse: collapse; /* Убираем двойные границы */
@@ -184,7 +188,8 @@ button,
 input[type="submit"],
 .button { /* Класс button для ссылок, стилизованных под кнопки */
     display: inline-block;
-    background-color: #007bff;
+    /* ИЗМЕНЕНО: Цвет фона основных кнопок на корпоративный */
+    background-color: #9169e3; /* Корпоративный цвет HEX 9169e3 */
     color: white;
     padding: 10px 20px;
     border: none;
@@ -198,20 +203,22 @@ input[type="submit"],
 button:hover,
 input[type="submit"]:hover,
 .button:hover {
-    background-color: #0056b3;
+    /* ИЗМЕНЕНО: Цвет фона основных кнопок при наведении на более темный оттенок корпоративного */
+    background-color: #7c57c7; /* Более темный оттенок корпоративного */
 }
 
 button.disabled,
 input[type="submit"].disabled,
 .button.disabled {
-    background-color: #cccccc;
+    background-color: #cccccc; /* Цвет неактивных кнопок (оставляем серый) */
     cursor: not-allowed;
     opacity: 0.7;
 }
 
-/* Стили для ссылок, которые не кнопки */
+/* Стили для ссылок, которые не кнопки (в основном тексте или подвале) */
 a {
-    color: #007bff;
+    /* ИЗМЕНЕНО: Цвет обычных ссылок на корпоративный */
+    color: #9169e3; /* Корпоративный цвет HEX 9169e3 */
     text-decoration: none;
 }
 

@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
-from dotenv import load_dotenv
 import dj_database_url
+# Импортируем load_dotenv для загрузки из .env и set_key для записи в .env
+from dotenv import load_dotenv, set_key
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -10,17 +11,81 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(&d)ye32^%%#6z4f57k!g7oaxv+g7xod@)u)l^ou$_^0!-9&p%'
-
 # SECURITY WARNING: don't run with debug turned on in production!
+# ИЗМЕНЕНО: Можно управлять DEBUG через переменную окружения, но пока оставляем True как в вашем коде
 DEBUG = True
-
-ALLOWED_HOSTS = ['будущий_домен.ru', 'будущий_ip_адрес', 'localhost', '127.0.0.1']
+# Пример загрузки DEBUG из .env:
+# DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 
 # Application definition
-load_dotenv()
+
+# === Сначала определяем путь к .env файлу и загружаем существующие переменные ===
+dotenv_path = BASE_DIR / '.env'
+load_dotenv(dotenv_path) # Загружаем переменные из .env, если файл существует
+
+
+# SECURITY WARNING: keep the secret key used in production secret!
+# УДАЛЯЕМ хардкодный SECRET_KEY
+# SECRET_KEY = 'django-insecure-(&d)ye32^%%#6z4f57k!g7oaxv+g7xod@)u)l^ou$_^0!-9&p%'
+
+# === Проверка и генерация SECRET_KEY ===
+SECRET_KEY = os.environ.get('SECRET_KEY')
+
+if not SECRET_KEY:
+    # SECRET_KEY не найден в переменных окружения (включая загруженные из .env)
+    if DEBUG:
+        # Генерируем новый SECRET_KEY только в режиме DEBUG
+        try:
+            # Генерируем криптографически стойкий ключ
+            generated_key = os.urandom(32).hex()
+            SECRET_KEY = generated_key
+            print("Generated a new SECRET_KEY for local DEBUG.")
+
+            # Попытка сохранить ключ в .env файл
+            try:
+                # Создаем файл .env, если его нет, или открываем для добавления/изменения
+                if not dotenv_path.exists():
+                     dotenv_path.touch() # Создать файл, если он не существует
+                     print(f"Created .env file at {dotenv_path}")
+
+                # Используем set_key для безопасной записи/обновления ключа в .env
+                # set_key сохранит ключ в файле в формате KEY=Value
+                set_key(dotenv_path, 'SECRET_KEY', SECRET_KEY)
+                print(f"Saved SECRET_KEY to {dotenv_path}")
+
+                # Опционально, можно снова загрузить, хотя set_key обычно обновляет os.environ
+                # load_dotenv(dotenv_path)
+                # os.environ['SECRET_KEY'] = SECRET_KEY # Убедимся, что в текущем процессе переменная установлена
+
+            except Exception as e:
+                # Если сохранить не удалось (например, нет прав записи), выводим предупреждение
+                print(f"WARNING: Could not save SECRET_KEY to {dotenv_path}. Please add 'SECRET_KEY={SECRET_KEY}' manually to your .env file or environment variables. Error: {e}")
+                # Приложение продолжит работать с этим сгенерированным ключом в текущем процессе
+
+        except Exception as e:
+             # Если генерация ключа вызвала ошибку (очень маловероятно)
+             print(f"FATAL ERROR: Could not generate SECRET_KEY: {e}")
+             # В этом случае SECRET_KEY останется None, и Django вызовет ошибку позже.
+
+
+    else:
+        # В режиме PRODUCTION, SECRET_KEY ДОЛЖЕН быть установлен как переменная окружения
+        # Если его нет, вызываем фатальную ошибку, чтобы приложение не запустилось
+        raise EnvironmentError("FATAL: SECRET_KEY not found in environment variables! This is required for production (DEBUG=False). Please set the SECRET_KEY environment variable.")
+
+# === Проверка, что SECRET_KEY установлен после всех попыток ===
+if not SECRET_KEY:
+    # Этот случай должен возникать только если генерация в DEBUG не удалась
+    # и SECRET_KEY остался None
+    raise EnvironmentError("FATAL: SECRET_KEY is not set. Check your .env file, environment variables, or permissions if in DEBUG mode.")
+
+
+# ====================================================
+
+# ИЗМЕНЕНО: Загружаем ALLOWED_HOSTS из переменной окружения, если она установлена
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -47,8 +112,7 @@ ROOT_URLCONF = 'LuchAgregator.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
+        'DIRS': [BASE_DIR / 'templates'], # Исправлено: используем Path
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -65,6 +129,8 @@ WSGI_APPLICATION = 'LuchAgregator.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
+# ИЗМЕНЕНО: Загружаем DATABASE_URL из переменной окружения
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///{}'.format(os.path.join(BASE_DIR, 'db.sqlite3')))
 DATABASES = {
     'default': dj_database_url.parse(DATABASE_URL)

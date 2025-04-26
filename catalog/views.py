@@ -404,33 +404,46 @@ def update_selection_view(request):
     # Собирает данные с помощью get_selected_items_and_total и рендерит частичный шаблон
     # Принимает список сообщений для отображения в AJAX ответе
     def render_and_return_partial(msgs_list=None):
-         if msgs_list is None: msgs_list = []
-         # Сбор данных и расчет сумм происходит внутри get_selected_items_and_total
-         # Передаем КОПИЮ сессии, чтобы get_selected_items_and_total могла ее модифицировать (удалять некорректные)
-         selected_items, total_price, messages_from_processing, updated_selection_copy = get_selected_items_and_total(selection.copy())
+        """
+        Renders the selection summary partial.
+        Reads current session state, calculates, and renders.
+        """
+        if msgs_list is None: msgs_list = []
 
-         # Если в процессе get_selected_items_and_total были удалены элементы из сессии копии,
-         # обновляем оригинальную сессию и помечаем ее как измененную
-         if updated_selection_copy != selection:
-              request.session['selection'] = updated_selection_copy
-              request.session.modified = True
-              logger.info("Selection modified during partial render (cleaned up invalid items).")
-              # Важно: Обновляем локальную переменную selection тоже, чтобы частичный шаблон получил актуальные данные
-              #selection = updated_selection_copy # Нет, здесь не нужно, частичный шаблон рендерится с updated_selection_copy
+        # === Читаем АКТУАЛЬНОЕ состояние сессии из request.session ===
+        current_selection_state = request.session.get('selection', {})
+        logger.debug(f"Rendering partial based on session state: {current_selection_state}")
 
+        # Передаем копию АКТУАЛЬНОГО состояния сессии в get_selected_items_and_total
+        selected_items, total_price, messages_from_processing, updated_selection_copy = get_selected_items_and_total(
+            current_selection_state.copy())
 
-         # Добавляем сообщения, собранные во время обработки, в список сообщений для AJAX ответа
-         messages_list.extend(messages_from_processing)
+        # Если в процессе get_selected_items_and_total были удалены элементы из сессии копии,
+        # обновляем оригинальную сессию и помечаем ее как измененную
+        # Сравниваем результат cleanup с состоянием, прочитанным в начале этой функции
+        if updated_selection_copy != current_selection_state:
+            request.session['selection'] = updated_selection_copy
+            request.session.modified = True
+            logger.info("Selection modified during partial render (cleaned up invalid items).")
+            # Важно: Для контекста используем potentially updated state
+            final_selection_state_for_template = updated_selection_copy
+        else:
+            # Если cleanup ничего не изменил, используем то состояние, которое прочитали
+            final_selection_state_for_template = current_selection_state
 
-         context = {
-             'selected_items': selected_items,
-             'total_price': total_price,
-             'selection': updated_selection_copy, # Передаем актуальную структуру сессии из get_selected_items_and_total
-             'ajax_messages': messages_list, # Передаем сообщения для отображения в AJAX ответе
-         }
+        # Добавляем сообщения, собранные во время обработки, в список сообщений для AJAX ответа
+        msgs_list.extend(messages_from_processing)
 
-         html_content = render_to_string('catalog/selection_summary_partial.html', context, request=request)
-         return HttpResponse(html_content, status=200)
+        context = {
+            'selected_items': selected_items,
+            'total_price': total_price,
+            'selection': final_selection_state_for_template,
+            # Передаем актуальную структуру сессии (после возможной чистки)
+            'ajax_messages': msgs_list,  # Передаем сообщения для отображения в AJAX ответе
+        }
+
+        html_content = render_to_string('catalog/selection_summary_partial.html', context, request=request)
+        return HttpResponse(html_content, status=200)
 
 
     # === Обработка действия 'clear' ===

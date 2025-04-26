@@ -70,23 +70,25 @@
     </table>
 
     <div class="document-buttons">
-        {# === НОВАЯ КНОПКА "Применить цены" === #}
-        {# Класс button-apply-prices для обработки в JS #}
-        <button type="button" class="button button-apply-prices">Применить цены</button>
-        {# ==================================== #}
+        {# Верхний ряд кнопок #}
+        <div class="button-row top-row">
+            {# Кнопка "Применить цены" #}
+            <button type="button" class="button button-apply-prices">Применить цены</button>
+            {# Кнопка очистки (логика disabled и onclick для пустого выбора остается) #}
+            <button type="button" class="button button-clear ajax-update-button{% if not selected_items %} disabled{% endif %}" data-action="clear" title="Очистить весь выбор" {% if not selected_items %} onclick="return false;"{% else %} onclick="return confirm('Вы уверены, что хотите очистить весь выбор?');"{% endif %}>Очистить выбор</button>
+        </div>
 
-        {# Кнопка очистки всего выбора (AJAX) #}
-        {# Класс ajax-update-button для обработки в JS, data-action для идентификации #}
-        {# disabled и onclick="return false;" для неактивного состояния при пустом выборе #}
-        <button type="button" class="button button-clear ajax-update-button{% if not selected_items %} disabled{% endif %}" data-action="clear" title="Очистить весь выбор" {% if not selected_items %} onclick="return false;"{% else %} onclick="return confirm('Вы уверены, что хотите очистить весь выбор?');"{% endif %}>Очистить выбор</button>
-
-        {# Основные кнопки генерации документов (стандартные ссылки) #}
-        {# disabled и onclick="return false;" для неактивного состояния при пустом выборе #}
-        <a href="{% url 'generate_commercial_offer_docx' %}" class="button{% if not selected_items %} disabled{% endif %}" {% if not selected_items %} onclick="return false;"{% endif %}>Сформировать КП</a>
-        <a href="{% url 'generate_commercial_offer_umed_docx' %}" class="button{% if not selected_items %} disabled{% endif %}" {% if not selected_items %} onclick="return false;"{% endif %}>КП Учебный мир</a>
-        <a href="{% url 'generate_commercial_offer_pos78_docx' %}" class="button{% if not selected_items %} disabled{% endif %}" {% if not selected_items %} onclick="return false;"{% endif %}>КП ПОС78</a>
-        {# Кнопка PDF (скрыта) #}
-        {# <a href="{% url 'generate_commercial_offer_pdf' %}" class="button{% if not selected_items %} disabled{% endif %}" {% if not selected_items %} onclick="return false;"{% endif %}>Сформировать КП (PDF)</a> #}
+        {# Нижний ряд кнопок #}
+        <div class="button-row bottom-row">
+            {# Кнопка основного КП (логика disabled и onclick для пустого выбора остается) #}
+            <a href="{% url 'generate_commercial_offer_docx' %}" class="button{% if not selected_items %} disabled{% endif %}" {% if not selected_items %} onclick="return false;"{% endif %}>Сформировать КП</a>
+            {# Кнопка КП Учебный мир #}
+            <a href="{% url 'generate_commercial_offer_umed_docx' %}" class="button{% if not selected_items %} disabled{% endif %}" {% if not selected_items %} onclick="return false;"{% endif %}>КП Учебный мир</a>
+            {# Кнопка КП ПОС78 #}
+            <a href="{% url 'generate_commercial_offer_pos78_docx' %}" class="button{% if not selected_items %} disabled{% endif %}" {% if not selected_items %} onclick="return false;"{% endif %}>КП ПОС78</a>
+            {# PDF кнопка, если она есть и не закомментирована #}
+            {# <a href="{% url 'generate_commercial_offer_pdf' %}" class="button{% if not selected_items %} disabled{% endif %}" {% if not selected_items %} onclick="return false;"{% endif %}>Сформировать КП (PDF)</a> #}
+        </div>
     </div>
 
 {% else %} {# Если выбор пуст, показываем неактивные кнопки #}

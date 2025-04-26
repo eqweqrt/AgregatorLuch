@@ -9,16 +9,13 @@ venv/
 .venv/
 env/
 .env/
-myenv/ # Если у вас другое имя для виртуального окружения
+myenv/
 
 # Collected static files
 staticfiles/
 
 # Uploaded media files
 media/
-# Если вы ХОТИТЕ включить некоторые медиа файлы в репозиторий (например, стандартные заглушки),
-# можно добавить исключения, но обычно папку media/ игнорируют целиком.
-#!media/some_default_image.png
 
 # Logs
 *.log
