@@ -22,9 +22,6 @@ urlpatterns = [
 
     # URL для журнала документов
     path('document-log/', views.document_log_view, name='document_log'),
-
-    # URL для генерации PDF (оставлен, но кнопка скрыта)
-    # path('selection/generate-pdf/', views.generate_commercial_offer_pdf_view, name='generate_commercial_offer_pdf'),
 ]
 
 # Обработка статических и медиа файлов в режиме отладки

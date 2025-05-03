@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # ИЗМЕНЕНО: Можно управлять DEBUG через переменную окружения, но пока оставляем True как в вашем коде
-DEBUG = False
+DEBUG = True
 # Пример загрузки DEBUG из .env:
 # DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 

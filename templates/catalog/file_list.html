@@ -1,0 +1,94 @@
+<!-- templates/catalog/file_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Список файлов{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/catalog_style.css' %}">
+    <style>
+        /* Дополнительные стили для страницы с файлами */
+        .file-list-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-list-header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .file-list-header h1 {
+            color: #9169e3; /* Корпоративный цвет */
+            font-size: 1.8em;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-item-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .file-item-download {
+            margin-left: 20px;
+        }
+
+        .file-item-download a {
+            background-color: #9169e3; /* Корпоративный цвет */
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .file-item-download a:hover {
+            background-color: #7c57c7; /* Темнее при наведении */
+        }
+
+        .no-files-message {
+            text-align: center;
+            font-size: 1.2em;
+            color: #777;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="file-list-container">
+        <div class="file-list-header">
+            <h1>Список доступных файлов</h1>
+        </div>
+
+        {% if files %}
+            <ul style="list-style: none; padding: 0;">
+                {% for file in files %}
+                    <li class="file-item">
+                        <span class="file-item-name">{{ file.name }}</span>
+                        <div class="file-item-download">
+                            <a href="{% url 'download_file' file.id %}" class="button">Скачать</a>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="no-files-message">Нет доступных файлов.</p>
+        {% endif %}
+    </div>
+{% endblock %}

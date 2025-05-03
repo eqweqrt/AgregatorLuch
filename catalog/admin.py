@@ -1,35 +1,44 @@
 from django.contrib import admin
-# Импортируем все нужные модели, включая DocumentLog
 from .models import Category, Product, ProductModel, DocumentLog
+from .models import File
 
-# Регистрируем существующие модели (убедитесь, что они уже есть и не закомментированы)
+# Регистрация существующих моделей
 admin.site.register(Category)
 admin.site.register(Product)
 admin.site.register(ProductModel)
 
-# === Регистрация модели DocumentLog для админ-панели ===
-
-@admin.register(DocumentLog) # Используем декоратор для регистрации
+# === Регистрация модели DocumentLog ===
+@admin.register(DocumentLog)
 class DocumentLogAdmin(admin.ModelAdmin):
-    """
-    Настройки отображения модели DocumentLog в админ-панели.
-    """
-    # Поля, которые будут отображаться в списке записей журнала
-    list_display = ('document_number', 'user', 'timestamp', 'document_type')
-
-    # Добавляем фильтры на боковую панель (для удобства поиска)
+    list_display = ('document_number', 'user', 'timestamp', 'document_type', 'file_link')
     list_filter = ('document_type', 'timestamp', 'user')
-
-    # Добавляем возможность поиска по указанным полям
-    search_fields = ('document_number__iexact', 'user__username__icontains', 'document_type') # __iexact для точного номера (без учета регистра), __icontains для поиска по части имени пользователя
-
-    # Делаем все поля только для чтения в детальном представлении (нельзя изменить запись журнала после создания)
+    search_fields = ('document_number__iexact', 'user__username__icontains', 'document_type')
     readonly_fields = ('document_number', 'user', 'timestamp', 'document_type')
-
-    # Сортировка записей по умолчанию (по убыванию времени создания)
     ordering = ('-timestamp',)
 
-# === Конец регистрации DocumentLog ===
+    def file_link(self, obj):
+        if obj.file:
+            return f'<a href="{obj.file.url}" target="_blank">Скачать</a>'
+        return "Файл отсутствует"
 
-# Убедитесь, что у вас нет других admin.site.register(DocumentLog) ниже,
-# если вы использовали декоратор @admin.register.
+    file_link.allow_tags = True
+    file_link.short_description = "Файл"
+
+@admin.register(File)
+class FileAdmin(admin.ModelAdmin):
+    """
+    Настройки отображения модели File в админ-панели.
+    """
+    list_display = ('name', 'uploaded_by', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at', 'uploaded_by')
+    search_fields = ('name__icontains', 'uploaded_by__username__icontains')
+    readonly_fields = ('uploaded_by', 'created_at')
+    ordering = ('-created_at',)
+
+    def save_model(self, request, obj, form, change):
+        """
+        Автоматически присваиваем пользователя, который загрузил файл.
+        """
+        if not obj.uploaded_by_id:
+            obj.uploaded_by = request.user
+        super().save_model(request, obj, form, change)

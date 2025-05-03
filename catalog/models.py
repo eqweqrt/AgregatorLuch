@@ -68,20 +68,19 @@ class ProductModel(models.Model):
         return f"{self.product.name} - {self.name} (ID: {self.id}, Цена: {self.price})"
 
 class DocumentLog(models.Model):
-    """Модель для логирования создания коммерческих предложений."""
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL, # Если пользователь удален, запись о документе остается, user=NULL
+        on_delete=models.SET_NULL,
         null=True,
         verbose_name="Пользователь"
     )
     timestamp = models.DateTimeField(
-        auto_now_add=True, # Автоматически устанавливает текущее время при создании записи
+        auto_now_add=True,
         verbose_name="Дата и время создания"
     )
     document_number = models.PositiveIntegerField(
         verbose_name="Номер документа",
-        unique=True, # Гарантируем уникальность номера документа
+        unique=True,
         help_text="Автоматически генерируемый номер документа"
     )
     document_type = models.CharField(
@@ -89,17 +88,22 @@ class DocumentLog(models.Model):
         choices=[('pdf', 'PDF'), ('docx', 'DOCX')],
         verbose_name="Тип документа"
     )
-    # Можно добавить другие поля, если нужно логировать что-то еще, например, список model_id
+    # Новое поле для хранения файла
+    file = models.FileField(
+        upload_to='documents/',
+        blank=True,
+        null=True,
+        verbose_name="Файл документа"
+    )
 
     def __str__(self):
-        # Отображение в админке и т.д.
         user_info = self.user.username if self.user else "Неизвестный пользователь"
         return f"Документ №{self.document_number} ({self.document_type}) от {self.timestamp.strftime('%d.%m.%Y %H:%M')} создан пользователем {user_info}"
 
     class Meta:
         verbose_name = "Журнал документа"
         verbose_name_plural = "Журнал документов"
-        ordering = ['-timestamp'] # Сортируем по убыванию времени (самые новые сверху)
+        ordering = ['-timestamp']
 
 # Вспомогательная функция для получения следующего номера документа
 def get_next_document_number():
@@ -109,3 +113,17 @@ def get_next_document_number():
     # Если записей нет, начинаем с 1, иначе увеличиваем максимальный номер на 1
     next_number = (last_log['max_num'] or 0) + 1
     return next_number
+
+class File(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Название файла")
+    file = models.FileField(upload_to='files/', verbose_name="Файл")
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_files', verbose_name="Загружен админом")
+    is_active = models.BooleanField(default=True, verbose_name="Доступен для скачивания")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата загрузки")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Файл"
+        verbose_name_plural = "Файлы"

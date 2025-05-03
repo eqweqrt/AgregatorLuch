@@ -1,0 +1,42 @@
+[33mcommit 6a7d5fa43c8733f43c7c81dffba10945403ec0f9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: main <main@cv4687519.novalocal>
+Date:   Sat May 3 07:59:44 2025 +0300
+
+    03.05.20256
+
+[33mcommit 058333776428d5aaffa5d3fecf94c4d47a59af11[m
+Merge: 3c6947d 5f8da7a
+Author: eqweqrt <russciyvasia@bk.ru>
+Date:   Sat Apr 26 15:16:25 2025 +0700
+
+    feat: Add UI enhancements and environment loading for settings
+
+[33mcommit 3c6947df18fb713a21bc59631bf413e1b6b34cdc[m
+Author: eqweqrt <russciyvasia@bk.ru>
+Date:   Sat Apr 26 15:13:01 2025 +0700
+
+    feat: Add UI enhancements and environment loading for settings
+
+[33mcommit 5f8da7a760e852ae105274d9c3148bc6f66a1d50[m
+Author: Mikhnyuk Denis Alexevich <83284438+eqweqrt@users.noreply.github.com>
+Date:   Thu Apr 24 18:21:57 2025 +0700
+
+    Update settings.py
+
+[33mcommit f0952161bc5f87163a097d561bfdff949c378575[m
+Author: eqweqrt <russciyvasia@bk.ru>
+Date:   Wed Apr 23 21:39:04 2025 +0700
+
+    feat: Implement editable prices for commercial offer and fix docx image loading
+
+[33mcommit 12ffc6eb1b29cfecdec258288dc230c266bc6aa6[m
+Author: eqweqrt <russciyvasia@bk.ru>
+Date:   Tue Apr 22 17:18:13 2025 +0700
+
+    Add production dependencies and settings adjustments
+
+[33mcommit c46e9c76f8103ee551bb561f028e65632c8f321b[m
+Author: eqweqrt <russciyvasia@bk.ru>
+Date:   Tue Apr 22 17:10:38 2025 +0700
+
+    Initial project structure

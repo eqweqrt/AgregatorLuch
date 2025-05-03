@@ -1,4 +1,4 @@
-{# catalog/templates/catalog/catalog_selection.html #}
+<!-- catalog/templates/catalog/catalog_selection.html -->
 {% extends 'base.html' %}
 {% load static %}
 {% load custom_filters %}
@@ -7,38 +7,36 @@
 
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/catalog_style.css' %}">
-    {# Дополнительные стили для нового поля цены и сообщений AJAX #}
     <style>
-        .item-price-input {
-            /* Стили для поля ввода цены в таблице */
-            padding: 2px 5px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
+        .button {
+            padding: 10px 20px;
+            background-color: #9169e3; /* Корпоративный цвет */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
         }
-        .messages.ajax-messages {
-             margin-top: 10px;
-             margin-bottom: 10px;
-             padding-left: 20px; /* Отступ для списка */
+        .button:hover {
+            background-color: #7c57c7; /* Темнее при наведении */
         }
-        .messages.ajax-messages li {
-             list-style: disc; /* Маркеры списка */
-             margin-bottom: 5px;
-        }
-         /* Стили сообщений (info, warning, error, success) уже должны быть в style.css */
     </style>
 {% endblock %}
 
 {% block content %}
     <h2>Каталог продукции</h2>
 
-    {# Стандартные сообщения Django отображаются в base.html #}
+    <!-- Кнопка для просмотра списка файлов -->
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'file_list' %}" class="button">Просмотреть список файлов</a>
+    </div>
 
     <div class="catalog-container">
-
-        {# --- Блок с иерархическим каталогом (без изменений) --- #}
+        <!-- Блок с иерархическим каталогом (без изменений) -->
         <div class="catalog-tree">
             <h3>Продукция</h3>
-            {# ... ваш код дерева каталога ... #}
             <ul>
                 {% for category, products_dict in structured_catalog.items %}
                     <li class="category-item">
@@ -53,32 +51,23 @@
                                         <div class="product-content collapsible collapsed">
                                             <ul class="model-list-in-product">
                                                 {% for model in models_list %}
-                                                    {# Добавляем data-model-id к li, т.к. на него может ссылаться JS #}
                                                     <li class="model-item" data-model-id="{{ model.id }}">
                                                         <h6>Модель: {{ model.name }}</h6>
-                                                        {# Отображаем цену из БД здесь #}
                                                         <p>Цена (каталог): {{ model.price|floatformat:2 }} руб.</p>
-                                                        {# Форма/элементы для обновления количества #}
-                                                        <div class="quantity-controls"> {# Оборачиваем в div для удобства #}
-                                                            {% csrf_token %} {# CSRF токен нужен, если форма отправляется, но мы используем JS #}
-                                                            {# Поле количества должно быть для отправки AJAX запроса 'set' #}
-                                                             <label for="quantity_{{ model.id }}">Кол-во:</label>
-                                                             {# Получаем текущее количество из сессии. Если модель не в сессии, quantity=0 #}
+                                                        <div class="quantity-controls">
+                                                            {% csrf_token %}
+                                                            <label for="quantity_{{ model.id }}">Кол-во:</label>
                                                             <input type="number"
                                                                    id="quantity_{{ model.id }}"
                                                                    name="quantity"
-                                                                   value="{{ selection|get_item:model.id|get_nested_item:'quantity'|default:0 }}" {# Читаем quantity из словаря в сессии #}
+                                                                   value="{{ selection|get_item:model.id|get_nested_item:'quantity'|default:0 }}"
                                                                    min="0"
                                                                    class="quantity-input"
-                                                                   data-model-id="{{ model.id }}"> {# Добавляем data-model-id для JS #}
-                                                            {# Кнопка OK для установки количества, отправляет action='set' #}
+                                                                   data-model-id="{{ model.id }}">
                                                             <button type="button" class="ajax-update-button button-set-quantity small-button" data-action="set" data-model-id="{{ model.id }}" title="Установить количество">OK</button>
-                                                            {# Кнопки +/- для быстрого изменения количества #}
-                                                            {# <button type="button" class="ajax-update-button button-add-quantity small-button" data-action="add" data-model-id="{{ model.id }}" title="Добавить 1 шт.">+</button> #}
-                                                            {# <button type="button" class="ajax-update-button button-remove-quantity small-button" data-action="remove" data-model-id="{{ model.id }}" title="Удалить 1 шт.">-</button> #}
                                                         </div>
                                                         {% if model.details %}
-                                                             <div class="model-details"><h6>Описание:</h6><p>{{ model.details|linebreaksbr }}</p></div>
+                                                            <div class="model-details"><h6>Описание:</h6><p>{{ model.details|linebreaksbr }}</p></div>
                                                         {% endif %}
                                                         {% if model.image %}
                                                             <div class="model-image-container"><img src="{{ model.image.url }}" alt="{{ model.name }}"></div>
@@ -96,27 +85,19 @@
             </ul>
         </div>
 
-        {# --- Блок с текущим выбором и кнопками генерации документов --- #}
+        <!-- Блок с текущим выбором и кнопками генерации документов -->
         <div class="selection-summary">
             <h3>Ваш выбор</h3>
-            {# Этот div будет обновляться AJAX-ом #}
             <div class="selection-summary-content">
-                {# Начальное содержимое будет загружено при рендеринге страницы #}
-                {# Внутри этого блока будет таблица, кнопки и сообщения AJAX #}
                 {% include 'catalog/selection_summary_partial.html' with selected_items=selected_items total_price=total_price selection=selection %}
             </div>
         </div>
+    </div>
 
-    </div> {# Конец div.catalog-container #}
-
-    {# Передаем URL из Django в JavaScript - ДОЛЖЕН БЫТЬ ДО catalog_script.js #}
     <script>
         const UPDATE_SELECTION_URL = "{% url 'update_selection' %}";
-        const CATALOG_SELECTION_URL = "{% url 'catalog_selection' %}"; // Может быть не нужен
-        const CSRF_TOKEN = "{{ csrf_token }}"; // Передаем CSRF токен для AJAX POST запросов
+        const CATALOG_SELECTION_URL = "{% url 'catalog_selection' %}";
+        const CSRF_TOKEN = "{{ csrf_token }}";
     </script>
-
-    {# Подключаем ваш JavaScript файл #}
     <script src="{% static 'js/catalog_script.js' %}"></script>
-
 {% endblock %}

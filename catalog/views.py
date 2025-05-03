@@ -15,8 +15,14 @@ from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.contrib import messages
-from django.db.models import Max, Prefetch # Импортируем Prefetch
-from django.utils.safestring import mark_safe # Для использования HTML в сообщениях
+from django.db.models import Max, Prefetch
+from django.utils.safestring import mark_safe
+from django.http import HttpResponse, Http404
+from django.utils.http import quote
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .forms import FileUploadForm
+from .models import File
 
 # Получаем логгер для приложения catalog
 logger = logging.getLogger('catalog')
@@ -913,58 +919,40 @@ def generate_commercial_offer_pdf_view(request):
 # === Хелпер функция для добавления границ к ячейке DOCX ---
 # (Без изменений относительно предыдущего полного файла)
 def set_cell_border(cell, **kwargs):
-    """Применяет границы к ячейке Word."""
-    # Ensure necessary imports are available globally
-    # from docx.oxml.shared import OxmlElement, qn # Imported at top
     tc = cell._tc
     tcPr = tc.get_or_add_tcPr()
-
     borders = {
         'top': {'val': 'single', 'sz': 12, 'color': '#000000'},
         'bottom': {'val': 'single', 'sz': 12, 'color': '#000000'},
         'left': {'val': 'single', 'sz': 12, 'color': '#000000'},
         'right': {'val': 'single', 'sz': 12, 'color': '#000000'},
     }
-
-    # Update default borders with provided kwargs
-    for border_name, border_props in kwargs.items():
-        if border_name in borders:
-             borders[border_name] = border_props
-        elif border_name in ['top', 'bottom', 'left', 'right'] and border_props is None:
-             borders[border_name] = None
-
+    borders.update(kwargs)
     tcBorders = tcPr.first_child_found_in('w:tcBorders')
     if tcBorders is None:
         tcBorders = OxmlElement('w:tcBorders')
         tcPr.append(tcBorders)
-
     for border_name, border_props in borders.items():
         border_element = tcBorders.find(qn('w:' + border_name))
         if border_props is not None:
             if border_element is None:
                 border_element = OxmlElement('w:' + border_name)
                 tcBorders.append(border_element)
-            # Set attributes from the properties dictionary
             for key, value in border_props.items():
-                 border_element.set(qn('w:' + key), str(value))
+                border_element.set(qn('w:' + key), str(value))
         else:
-            # If border_props is None, remove the border element
             if border_element is not None:
-                 tcBorders.remove(border_element)
+                tcBorders.remove(border_element)
 
 
 # --- Универсальная функция для генерации DOCX ---
+# Универсальная функция для генерации DOCX
 def generate_docx_offer(request, template_file_name, filename_prefix):
-    """
-    Генерирует DOCX коммерческого предложения по указанному шаблону,
-    используя цены из сессии и старую логику загрузки изображений.
-    """
     print(f"\nEntering generate_docx_offer with template: {template_file_name}")
 
-    # --- Сбор данных о выбранных товарах (СТАРАЯ ЛОГИКА ДЛЯ ИЗОБРАЖЕНИЙ) ---
+    # Сбор данных о выбранных товарах
     selection = request.session.get('selection', {})
     selected_items_data = []
-    # Используем Decimal для точных расчетов цены
     total_price = Decimal('0.00')
 
     if not selection:
@@ -972,112 +960,95 @@ def generate_docx_offer(request, template_file_name, filename_prefix):
         print("Selection is empty, redirecting.")
         return redirect('catalog_selection')
 
-    print("Starting to collect selected items data (using old image logic)...")
-    # Получаем все выбранные модели одним запросом для эффективности
+    print("Starting to collect selected items data...")
     model_ids_in_selection = [int(model_id_str) for model_id_str in selection.keys() if str(model_id_str).isdigit()]
     selected_models_queryset = ProductModel.objects.select_related('product').filter(id__in=model_ids_in_selection)
     selected_models_dict = {str(model.id): model for model in selected_models_queryset}
 
-
-    for model_id_str, item_data in list(selection.items()): # Итерируем по элементам сессии
-         try:
+    for model_id_str, item_data in list(selection.items()):
+        try:
             model_id = int(model_id_str)
-            model = selected_models_dict.get(model_id_str) # Получаем модель из предзагруженного словаря
+            model = selected_models_dict.get(model_id_str)
 
             if not model:
-                 print(f"Error: Model ID {model_id_str} not found in DB during DOCX generation. Removing from selection.")
-                 if model_id_str in selection:
-                     del selection[model_id_str]
-                     request.session.modified = True
-                 messages.warning(request, f"Предупреждение: Позиция с ID {model_id_str} не найдена и удалена из выбора.")
-                 continue
+                print(f"Error: Model ID {model_id_str} not found in DB during DOCX generation. Removing from selection.")
+                if model_id_str in selection:
+                    del selection[model_id_str]
+                    request.session.modified = True
+                messages.warning(request, f"Предупреждение: Позиция с ID {model_id_str} не найдена и удалена из выбора.")
+                continue
 
-            # Читаем quantity и price из item_data словаря
             quantity = item_data.get('quantity', 0)
             price_str = item_data.get('price')
 
             try:
-                 quantity = int(quantity) if quantity is not None and str(quantity).strip().isdigit() else 0
-                 if quantity < 0: quantity = 0
+                quantity = int(quantity) if quantity is not None and str(quantity).strip().isdigit() else 0
+                if quantity < 0: quantity = 0
 
-                 # Используем цену из сессии, если она есть и корректна, иначе из БД
-                 unit_price = model.price # Цена по умолчанию из БД
-                 if price_str is not None and price_str != '':
-                      try:
-                           price_from_session = Decimal(price_str)
-                           if price_from_session >= 0:
-                                unit_price = price_from_session # Используем цену из сессии, если валидна
-                           else:
-                                logger.warning(f"Negative price ({price_from_session}) found in session for model ID {model_id_str}. Using DB price.")
-                                messages.warning(request, f"Обнаружена некорректная цена для позиции '{model.name}'. Использована цена из каталога.")
-                      except (ValueError, InvalidOperation):
-                           logger.warning(f"Invalid price format '{price_str}' in session for model ID {model_id_str}. Using DB price.")
-                           messages.warning(request, f"Предупреждение: некорректная цена для позиции '{model.name}' в выборе. Использована цена из каталога.")
-                 # Если price_str is None or '', unit_price остается из БД
+                unit_price = model.price
+                if price_str is not None and price_str != '':
+                    try:
+                        price_from_session = Decimal(price_str)
+                        if price_from_session >= 0:
+                            unit_price = price_from_session
+                        else:
+                            logger.warning(f"Negative price ({price_from_session}) found in session for model ID {model_id_str}. Using DB price.")
+                            messages.warning(request, f"Обнаружена некорректная цена для позиции '{model.name}'. Использована цена из каталога.")
+                    except (ValueError, InvalidOperation):
+                        logger.warning(f"Invalid price format '{price_str}' in session for model ID {model_id_str}. Using DB price.")
+                        messages.warning(request, f"Предупреждение: некорректная цена для позиции '{model.name}' в выборе. Использована цена из каталога.")
 
             except (ValueError, InvalidOperation):
-                 logger.warning(f"Error converting quantity ({quantity}) or price ({price_str}) for model ID {model_id_str}. Skipping item.")
-                 if model_id_str in selection: # Удаляем на всякий случай
-                     del selection[model_id_str]
-                     request.session.modified = True
-                 continue # Пропускаем элемент
+                logger.warning(f"Error converting quantity ({quantity}) or price ({price_str}) for model ID {model_id_str}. Skipping item.")
+                if model_id_str in selection:
+                    del selection[model_id_str]
+                    request.session.modified = True
+                continue
 
             if quantity <= 0:
-                 print(f"Warning: Found zero or negative quantity ({quantity}) for model ID {model_id_str} during DOCX generation. Removing from selection.")
-                 if model_id_str in selection:
-                     del selection[model_id_str]
-                     request.session.modified = True
-                 continue
+                print(f"Warning: Found zero or negative quantity ({quantity}) for model ID {model_id_str} during DOCX generation. Removing from selection.")
+                if model_id_str in selection:
+                    del selection[model_id_str]
+                    request.session.modified = True
+                continue
 
-            # === СТАРАЯ ЛОГИКА ПОЛУЧЕНИЯ IMAGE_PATH ===
             image_path = None
-            # Проверяем, есть ли image, атрибут .path и СУЩЕСТВУЕТ ли файл на диске
             if model.image and hasattr(model.image, 'path') and os.path.exists(model.image.path):
-                 image_path = model.image.path # <-- Если все ОК, ПУТЬ ПОЛУЧАЕТСЯ ЗДЕСЬ
-                 print(f"DEBUG: Image path found on disk: {image_path}")
+                image_path = model.image.path
             elif model.image:
-                 # Если image есть, но .path нет ИЛИ os.path.exists(model.image.path) == False
-                 # Выводится предупреждение БЕЗ ИСПОЛЬЗОВАНИЯ image_path локально в этом блоке
-                 print(f"Warning: Image file for Model ID {model.id} ({model.image.name}) not found on disk at {getattr(model.image, 'path', 'N/A')}")
+                print(f"Warning: Image file for Model ID {model.id} ({model.image.name}) not found on disk at {getattr(model.image, 'path', 'N/A')}")
             else:
-                 print(f"DEBUG: Model {model.name} has no image attached.")
-            # =========================================
-
+                print(f"DEBUG: Model {model.name} has no image attached.")
 
             item_total = unit_price * quantity
-            # === ДОБАВЛЕНО ДЛЯ ОТЛАДКИ ===
-            print(f"DEBUG: Item {model.name} (ID: {model.id}) - Effective Price: {unit_price}, Quantity: {quantity}, Calculated item_total: {item_total}")
-            # ==============================
-
             selected_items_data.append({
                 'model': model,
                 'quantity': quantity,
-                'unit_price': unit_price, # Используем эффективную цену
+                'unit_price': unit_price,
                 'item_total': item_total,
-                'image_path': image_path, # <-- image_path (может быть None) ДОБАВЛЯЕТСЯ в словарь item
+                'image_path': image_path,
             })
             total_price += item_total
 
-         except (ProductModel.DoesNotExist, ValueError) as e:
-             if model_id_str in selection:
-                 print(f"Error processing model ID {model_id_str} for DOCX: {e}. Removing from selection.")
-                 del selection[model_id_str]
-                 request.session.modified = True
-                 messages.warning(request, f"Одна из выбранных позиций (ID: {model_id_str}) не найдена или некорректна и была удалена.")
-             continue
-         except Exception as e:
-              print(f"An unexpected error occurred while processing model ID {model_id_str} for DOCX: {e}")
-              messages.error(request, f"Произошла неожиданная ошибка при обработке позиции (ID: {model_id_str}): {e}")
-              continue
+        except (ProductModel.DoesNotExist, ValueError) as e:
+            if model_id_str in selection:
+                print(f"Error processing model ID {model_id_str} for DOCX: {e}. Removing from selection.")
+                del selection[model_id_str]
+                request.session.modified = True
+                messages.warning(request, f"Одна из выбранных позиций (ID: {model_id_str}) не найдена или некорректна и была удалена.")
+            continue
+        except Exception as e:
+            print(f"An unexpected error occurred while processing model ID {model_id_str} for DOCX: {e}")
+            messages.error(request, f"Произошла неожиданная ошибка при обработке позиции (ID: {model_id_str}): {e}")
+            continue
 
-    request.session.modified = True # Убеждаемся, что изменения в сессии (удаление некорректных) сохранятся
+    request.session.modified = True
 
     if not selected_items_data:
-         messages.warning(request, "В вашем выборе нет корректных позиций для формирования DOCX.")
-         print("selected_items_data is empty after processing, redirecting.")
-         return redirect('catalog_selection')
+        messages.warning(request, "В вашем выборе нет корректных позиций для формирования DOCX.")
+        print("selected_items_data is empty after processing, redirecting.")
+        return redirect('catalog_selection')
 
-    # === Логируем создание документа ===
     document_number = None
     try:
         document_number = get_next_document_number()
@@ -1092,11 +1063,9 @@ def generate_docx_offer(request, template_file_name, filename_prefix):
         print(f"Error logging DOCX generation: {e}")
         messages.error(request, f"Ошибка при записи в журнал документов: {e}. Документ может быть сгенерирован без номера.")
 
-    # === Определяем строковые представления даты и номера документа ===
     doc_date_str = datetime.date.today().strftime('%d.%m.%Y')
     doc_number_str = str(document_number) if document_number is not None else ""
 
-    # === Определяем путь к шаблонному файлу DOCX ===
     template_path = settings.BASE_DIR / 'templates' / template_file_name
     print(f"Attempting to load DOCX template from: {template_path}")
 
@@ -1115,20 +1084,9 @@ def generate_docx_offer(request, template_file_name, filename_prefix):
         messages.error(request, error_msg)
         return redirect('catalog_selection')
 
-    # --- Замена текстовых плейсхолдеров ---
     placeholders = {
         '{{document_date}}': doc_date_str,
         '{{document_number}}': doc_number_str if doc_number_str else 'б/н',
-        # TODO: Добавьте плейсхолдеры для других полей, если они есть в шаблоне DOCX
-        # '{{offer_title}}': 'Коммерческое предложение',
-        # '{{delivery_terms}}': '20 рабочих дней',
-        # '{{warranty_terms}}': '12 месяцев',
-        # '{{manager_name}}': 'Логинов Алексей',
-        # '{{company_name}}': 'ЛУЧ-IT (ООО «Луч АйТи)',
-        # '{{manager_contact}}': '+7-382-299-56-13',
-        # '{{manager_email}}': 'komdir@luch-it.ru',
-        # '{{manager_signature_name}}': 'Логинов А. А.',
-        # '{{attorney_details}}': 'Доверенность от 01.02.2024г',
     }
 
     def simple_replace_placeholders_in_paragraphs(paragraphs_list):
@@ -1139,21 +1097,19 @@ def generate_docx_offer(request, template_file_name, filename_prefix):
                 if key in replaced_text:
                     replaced_text = replaced_text.replace(key, str(value))
             if replaced_text != paragraph_text:
-                 paragraph.clear()
-                 paragraph.add_run(replaced_text)
+                paragraph.clear()
+                paragraph.add_run(replaced_text)
 
     simple_replace_placeholders_in_paragraphs(document.paragraphs)
     for section in document.sections:
-         if section.header: simple_replace_placeholders_in_paragraphs(section.header.paragraphs)
-         if section.footer: simple_replace_placeholders_in_paragraphs(section.footer.paragraphs)
+        if section.header: simple_replace_placeholders_in_paragraphs(section.header.paragraphs)
+        if section.footer: simple_replace_placeholders_in_paragraphs(section.footer.paragraphs)
     for tbl in document.tables:
         for row in tbl.rows:
             for cell in row.cells:
                 simple_replace_placeholders_in_paragraphs(cell.paragraphs)
     print("Placeholder replacement finished.")
 
-
-    # --- Вставка таблицы товаров (ищем плейсхолдер) ---
     table_placeholder_text = '[PRODUCT_TABLE]'
     table_placeholder_paragraph = None
     for p in document.paragraphs:
@@ -1182,19 +1138,14 @@ def generate_docx_offer(request, template_file_name, filename_prefix):
             messages.error(request, save_error_msg)
             return HttpResponse("Error saving DOCX file without table: " + str(e), status=500)
 
-
-    # === Определяем точку вставки таблицы и удаляем плейсхолдер ===
     parent_element = table_placeholder_paragraph._element.getparent()
     placeholder_index = parent_element.index(table_placeholder_paragraph._element)
     parent_element.remove(table_placeholder_paragraph._element)
 
-
-    # === Создаем НОВУЮ таблицу и вставляем ее на место плейсхолдера ===
     print("Creating table with 1 row for headers...")
     num_cols = 4
-    table = document.add_table(rows=1, cols=num_cols) # 4 колонки: Товар, Кол-во, Цена, Сумма
+    table = document.add_table(rows=1, cols=num_cols)
 
-    # Вставляем таблицу на место удаленного абзаца-плейсхолдера
     table_element = table._element
     body = document._body._element
     try:
@@ -1202,210 +1153,135 @@ def generate_docx_offer(request, template_file_name, filename_prefix):
         print(f"Inserted table element at index {placeholder_index}.")
     except Exception as insert_e:
         print(f"Error inserting table element at placeholder index {placeholder_index}: {insert_e}. It might remain at the end.")
-        # Если вставка не удалась, таблица, вероятно, осталась в конце
 
-
-    # Устанавливаем примерные ширины колонок (опционально)
-    # Ширины в CM. Должно быть ровно столько, сколько колонок.
-    col_widths_cm = [Cm(7), Cm(2), Cm(3), Cm(3)] # Примерные ширины для 4 колонок
-    # В старой версии не было проверки WD_TABLE_COL_WIDTH и len(col_widths_cm) == num_cols
-    # Просто пытались установить ширину, что могло вызвать ошибку если не 4 колонки или нет WD_TABLE_COL_WIDTH
-    # Оставим как было в предоставленной старой версии
+    col_widths_cm = [Cm(7), Cm(2), Cm(3), Cm(3)]
     try:
         for col_idx, width in enumerate(col_widths_cm):
-             if col_idx < len(table.columns): # Проверяем, что колонка существует
-                 table.columns[col_idx].width = width
-                 # table.columns[col_idx].preferred_width_type = WD_TABLE_COL_WIDTH.W # В старой версии этого не было
-                 # table.columns[col_idx].preferred_width = width.emu # В старой версии этого не было
-        # table.preferred_width_type = WD_TABLE_COL_WIDTH.PCT # В старой версии этого не было
-        # table.preferred_width = 10000 # В старой версии этого не было
-        print("Table column widths set (old logic).")
+            if col_idx < len(table.columns):
+                table.columns[col_idx].width = width
+        print("Table column widths set.")
     except Exception as e:
-        # В старой версии логирование было print
-        print(f"Warning: Could not set table column widths programmatically (old logic): {e}")
+        print(f"Warning: Could not set table column widths programmatically: {e}")
         print("If borders are missing, ensure they are set in the template file.")
 
-
-    # --- Заполнение таблицы ---
-    # Заголовки таблицы (заполняем первую строку, созданную при init)
     print("Filling table headers...")
     hdr_cells = table.rows[0].cells
-    # В старой версии не было проверки len(hdr_cells) >= num_cols здесь
     hdr_cells[0].text = 'Товар'
     hdr_cells[1].text = 'Кол-во, шт.'
     hdr_cells[2].text = 'Цена за ед., руб.'
     hdr_cells[3].text = 'Сумма, руб.'
-    for cell in hdr_cells: # Здесь итерировались по всем ячейкам, даже если их больше 4
+    for cell in hdr_cells:
         if cell.paragraphs:
             paragraph = cell.paragraphs[0]
             paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
             for run in paragraph.runs:
-                 run.bold = True
+                run.bold = True
         cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
     print("Table headers filled.")
 
-
-    # Заполнение строк таблицы данными (используем add_row() для каждого элемента)
     print(f"Adding {len(selected_items_data)} rows for items...")
     for i, item in enumerate(selected_items_data):
-       print(f"  Adding row for item {i+1}/{len(selected_items_data)}: {item['model'].name}") # В старой версии лог был проще
-       # === Добавляем новую строку для каждого элемента ===
-       # В старой версии не было проверки len(table.columns) >= num_cols здесь
-       row_cells = table.add_row().cells # Каждая новая ячейка содержит один пустой абзац.
+        print(f"  Adding row for item {i+1}/{len(selected_items_data)}: {item['model'].name}")
+        row_cells = table.add_row().cells
 
-       # === Заполнение первой ячейки (Наименование / Описание / Изображение) ===
-       product_info_cell = row_cells[0]
-       # Исправленная логика: Очищаем все существующие абзацы, затем добавляем новые
-       # Важно: Итерируем по копии списка, чтобы избежать проблем при удалении элементов во время итерации
-       for p in list(product_info_cell.paragraphs):
-            # В старой версии не было проверки p._element.getparent() is not None
+        product_info_cell = row_cells[0]
+        for p in list(product_info_cell.paragraphs):
             p._element.getparent().remove(p._element)
 
-       # 1. Абзац для изображения (если есть)
-       # Условие как в старой версии, используем image_path из item
-       if item['image_path'] and os.path.exists(item['image_path']): # <-- УСЛОВИЕ КАК В СТАРОЙ ВЕРСИИ
-           try:
-               p_image = product_info_cell.add_paragraph()
-               run = p_image.add_run()
-               image_width_cm = 4.0
-               run.add_picture(str(item['image_path']), width=Cm(image_width_cm)) # <-- ИСПОЛЬЗУЕМ image_path ИЗ ITEM
-               p_image.alignment = WD_ALIGN_PARAGRAPH.CENTER
-               p_image.paragraph_format.space_after = Cm(0.1)
-               # В старой версии здесь не было отдельного log.debug о добавлении
-           except Exception as e:
-               # В старой версии логирование было print
-               print(f"    Error adding image {item['image_path']} to DOCX table cell: {e}")
-               img_name = getattr(item['model'].image, 'name', 'имя файла неизвестно') if item['model'].image else 'файл изображения не прикреплен'
-               p_error = product_info_cell.add_paragraph()
-               # ИСПРАВЛЕНО: apply italic = True directly to the run object returned by add_run
-               p_error.add_run(f"[Ошибка загрузки изображения: {img_name}]").italic = True
-               p_error.paragraph_format.space_after = Cm(0.1)
-       # Условие как в старой версии
-       elif item['model'].image: # <-- УСЛОВИЕ КАК В СТАРОЙ ВЕРСИИ
+        if item['image_path'] and os.path.exists(item['image_path']):
+            try:
+                p_image = product_info_cell.add_paragraph()
+                run = p_image.add_run()
+                image_width_cm = 4.0
+                run.add_picture(str(item['image_path']), width=Cm(image_width_cm))
+                p_image.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p_image.paragraph_format.space_after = Cm(0.1)
+            except Exception as e:
+                print(f"    Error adding image {item['image_path']} to DOCX table cell: {e}")
+                img_name = getattr(item['model'].image, 'name', 'имя файла неизвестно') if item['model'].image else 'файл изображения не прикреплен'
+                p_error = product_info_cell.add_paragraph()
+                p_error.add_run(f"[Ошибка загрузки изображения: {img_name}]").italic = True
+                p_error.paragraph_format.space_after = Cm(0.1)
+        elif item['model'].image:
             img_name = getattr(item['model'].image, 'name', 'имя файла неизвестно')
-            # В старой версии логирование было print и путь получался через getattr
             print(f"Warning: Image file for Model ID {item['model'].id} ({item['model'].image.name}) not found on disk at {getattr(item['model'].image, 'path', 'N/A')}")
             p_warning = product_info_cell.add_paragraph()
-            # ИСПРАВЛЕНО: apply italic = True directly to the run object returned by add_run
-            # В старой версии здесь была ваша ошибка .runs[-1]
             warning_run = p_warning.add_run(f"[Изображение модели '{item['model'].name}' не найдено на диске: {img_name}]")
-            if warning_run: # Добавил проверку на всякий случай
-                 warning_run.italic = True
+            if warning_run:
+                warning_run.italic = True
             p_warning.paragraph_format.space_after = Cm(0.1)
-       # В старой версии не было else для случая, когда image объекта нет вообще
 
+        print(f"  Adding name paragraph for {item['model'].name}...")
+        p_name = product_info_cell.add_paragraph()
+        p_name.add_run(f"{item['model'].product.name} - {item['model'].name}").bold = True
+        p_name.paragraph_format.space_after = Cm(0.1)
+        print("    Name paragraph added.")
 
-       # 2. Абзац для Названия Модели
-       print(f"  Adding name paragraph for {item['model'].name}...") # Добавил лог для проверки
-       p_name = product_info_cell.add_paragraph()
-       p_name.add_run(f"{item['model'].product.name} - {item['model'].name}").bold = True
-       p_name.paragraph_format.space_after = Cm(0.1)
-       print("    Name paragraph added.") # Добавил лог для проверки
-
-
-       # 3. Абзацы для Описания Модели
-       if item['model'].details:
-           print(f"  Adding details paragraphs for {item['model'].name}...") # Добавил лог для проверки
-           details_text = item['model'].details
-           for j, line in enumerate(details_text.splitlines()):
+        if item['model'].details:
+            print(f"  Adding details paragraphs for {item['model'].name}...")
+            details_text = item['model'].details
+            for j, line in enumerate(details_text.splitlines()):
                 line = line.strip()
                 if line:
-                     p_details = product_info_cell.add_paragraph()
-                     p_details.add_run(line).italic = True
-                     p_details.paragraph_format.space_before = Cm(0.05)
-                     p_details.paragraph_format.space_after = Cm(0.05)
-           print(f"    Details paragraphs added ({details_text.count('\\n')+1} lines).") # Добавил лог для проверки
-       else:
-           print(f"  No details for {item['model'].name}. Skipping details paragraphs.") # Добавил лог для проверки
+                    p_details = product_info_cell.add_paragraph()
+                    p_details.add_run(line).italic = True
+                    p_details.paragraph_format.space_before = Cm(0.05)
+                    p_details.paragraph_format.space_after = Cm(0.05)
+            print(f"    Details paragraphs added ({details_text.count('\\n')+1} lines).")
+        else:
+            print(f"  No details for {item['model'].name}. Skipping details paragraphs.")
 
+        product_info_cell.vertical_alignment = WD_ALIGN_VERTICAL.TOP
 
-       # Вертикальное выравнивание для ячейки
-       product_info_cell.vertical_alignment = WD_ALIGN_VERTICAL.TOP
-
-       # === Конец заполнения первой ячейки ===
-
-
-       # Заполнение остальных ячеек в этой строке (Кол-во, Цена, Сумма)
-       # Используем .text для установки текста, а затем форматируем первый абзац.
-       # Это более простой и, возможно, более надежный способ для этих ячеек.
-
-       qty_cell = row_cells[1]
-       qty_cell.text = str(item['quantity'])
-       if qty_cell.paragraphs:
+        qty_cell = row_cells[1]
+        qty_cell.text = str(item['quantity'])
+        if qty_cell.paragraphs:
             qty_cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-       qty_cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
-       print(f"    Qty cell filled ({item['quantity']}).") # Добавил лог
+        qty_cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+        print(f"    Qty cell filled ({item['quantity']}).")
 
-
-       price_cell = row_cells[2]
-       price_cell.text = f"{item['unit_price']:.2f}"
-       if price_cell.paragraphs:
+        price_cell = row_cells[2]
+        price_cell.text = f"{item['unit_price']:,.2f}".replace(',', ' ')
+        if price_cell.paragraphs:
             price_cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
-       price_cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
-       print(f"    Price cell filled ({item['unit_price']:.2f}).") # Добавил лог
+        price_cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+        print(f"    Price cell filled ({item['unit_price']:,.2f}).")
 
-
-       total_cell = row_cells[3]
-       total_cell.text = f"{item['item_total']:.2f}"
-       if total_cell.paragraphs:
-            # Делаем текст суммы жирным
+        total_cell = row_cells[3]
+        total_cell.text = f"{item['item_total']:,.2f}".replace(',', ' ')
+        if total_cell.paragraphs:
             for run in total_cell.paragraphs[0].runs:
-                 run.bold = True
+                run.bold = True
             total_cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
-       total_cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
-       print(f"    Total cell filled ({item['item_total']:.2f}).") # Добавил лог
+        total_cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+        print(f"    Total cell filled ({item['item_total']:,.2f}).")
 
-
-    # Строка Итого (добавляем новую строку)
     print("Adding total row...")
-    # В старой версии не было проверки len(table.columns) >= num_cols здесь
     total_row = table.add_row()
     total_row_cells = total_row.cells
 
-    # Объединяем ячейки (первые три)
-    # В старой версии не было проверок на наличие ячеек перед объединением и try/except
     merged_total_cell = total_row_cells[0].merge(total_row_cells[1]).merge(total_row_cells[2])
-
-    # === ИСПРАВЛЕННАЯ ЛОГИКА: ЗАПОЛНЕНИЕ ОБЪЕДИНЕННОЙ ЯЧЕЙКИ ДЛЯ "ИТОГО:" ===
-    # Устанавливаем текст напрямую, это создаст/заменит первый абзац.
     merged_total_cell.text = "Итого:"
-    # Затем форматируем первый абзац.
     if merged_total_cell.paragraphs:
         paragraph = merged_total_cell.paragraphs[0]
-        for run in paragraph.runs: # Делаем весь текст в абзаце жирным
-             run.bold = True
-        paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT # Выравнивание по правому краю
-    # Вертикальное выравнивание ячейки
+        for run in paragraph.runs:
+            run.bold = True
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     merged_total_cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
-    print("Total label cell added.") # Добавил лог
+    print("Total label cell added.")
 
-
-    # Заполняем последнюю ячейку (4-ю) в строке Итого общей суммой
     final_total_cell = total_row_cells[3]
-
-    # === ДОБАВЛЕНО ДЛЯ ОТЛАДКИ ===
-    print(f"DEBUG: Calculated total_price before insertion into DOCX: {total_price}, type: {type(total_price)}")
-    # ==============================
-
-    # === ИСПРАВЛЕННАЯ ЛОГИКА: ЗАПОЛНЕНИЕ ЯЧЕЙКИ С СУММОЙ ИТОГО ===
-    # Устанавливаем текст напрямую, это создаст/заменит первый абзац.
-    final_total_cell.text = f"{total_price:.2f}"
-    # Затем форматируем первый абзац.
+    final_total_cell.text = f"{total_price:,.2f}".replace(',', ' ')
     if final_total_cell.paragraphs:
         paragraph = final_total_cell.paragraphs[0]
-        for run in paragraph.runs: # Делаем весь текст в абзаце жирным
+        for run in paragraph.runs:
             run.bold = True
-        paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT # Выравнивание по правому краю
-    # Вертикальное выравнивание ячейки
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     final_total_cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
-    print("Final total cell added.") # Добавил лог
+    print("Final total cell added.")
 
-
-    # === Применяем границы ко всем ячейкам таблицы программно ===
-    # В старой версии не было try/except здесь
     print("Applying borders to table cells programmatically...")
-    try: # Добавил try/except из новой версии
-        # В старой версии не было проверки table.rows и row.cells
+    try:
         for row in table.rows:
             for cell in row.cells:
                 set_cell_border(cell)
@@ -1416,20 +1292,17 @@ def generate_docx_offer(request, template_file_name, filename_prefix):
         print(f"If borders are missing, ensure they are set in the template file: {template_path}")
         messages.info(request, "Если границы таблицы не появились, настройте их в шаблонном файле DOCX через Microsoft Word.")
 
-
-    # --- Сохранение и возврат HttpResponse ---
     print("Saving modified DOCX to BytesIO...")
-
     output = BytesIO()
     try:
         document.save(output)
         output.seek(0)
         print(f"Generated DOCX bytes length: {len(output.getvalue())} bytes.")
     except Exception as e:
-         error_msg = f"Ошибка при сохранении DOCX файла ('{template_file_name}'): {e}."
-         print(error_msg)
-         messages.error(request, error_msg)
-         return HttpResponse("Error saving DOCX file: " + str(e), status=500)
+        error_msg = f"Ошибка при сохранении DOCX файла ('{template_file_name}'): {e}."
+        print(error_msg)
+        messages.error(request, error_msg)
+        return HttpResponse("Error saving DOCX file: " + str(e), status=500)
 
     filename = f"commercial_offer_{filename_prefix}_{doc_number_str or 'undated'}.docx"
     response = HttpResponse(output.getvalue(),
@@ -1467,3 +1340,38 @@ def document_log_view(request):
     context = {'logs': logs}
     logger.info(f"Found {logs.count()} document log entries. Rendering document_log.html...")
     return render(request, 'catalog/document_log.html', context)
+
+@login_required
+def upload_file(request):
+    if request.method == 'POST':
+        form = FileUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            file_instance = form.save(commit=False)
+            file_instance.uploaded_by = request.user  # Привязываем файл к текущему пользователю
+            file_instance.save()
+            return redirect('file_list')  # Перенаправляем на список файлов
+    else:
+        form = FileUploadForm()
+    return render(request, 'catalog/upload_file.html', {'form': form})
+
+def file_list(request):
+    files = File.objects.filter(is_active=True)  # Только активные файлы
+    return render(request, 'catalog/file_list.html', {'files': files})
+
+@login_required
+def download_file(request, file_id):
+    try:
+        file_instance = File.objects.get(id=file_id, is_active=True)
+        file_path = file_instance.file.path
+        if os.path.exists(file_path):
+            with open(file_path, 'rb') as f:
+                from mimetypes import guess_type
+                content_type, _ = guess_type(file_path)
+                response = HttpResponse(f.read(), content_type=content_type or 'application/octet-stream')
+                filename = os.path.basename(file_path)
+                encoded_filename = quote(filename)  # Кодируем имя файла для HTTP-заголовков
+                response['Content-Disposition'] = f'attachment; filename="{encoded_filename}"'
+                return response
+        raise Http404("Файл не найден")
+    except File.DoesNotExist:
+        raise Http404("Файл недоступен")
