@@ -8,14 +8,10 @@ from dotenv import load_dotenv, set_key
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
 # SECURITY WARNING: don't run with debug turned on in production!
-# ИЗМЕНЕНО: Можно управлять DEBUG через переменную окружения, но пока оставляем True как в вашем коде
 DEBUG = False
-# Пример загрузки DEBUG из .env:
-# DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+
+ALLOWED_HOSTS = ['luch-it.space','www.luch-it.space','92.242.60.140']
 
 
 # Application definition
@@ -84,7 +80,7 @@ if not SECRET_KEY:
 # ====================================================
 
 # ИЗМЕНЕНО: Загружаем ALLOWED_HOSTS из переменной окружения, если она установлена
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+ALLOWED_HOSTS = ['92.242.60.140', 'luch-it.space', 'www.luch-it.space']
 
 
 INSTALLED_APPS = [
@@ -132,12 +128,19 @@ WSGI_APPLICATION = 'LuchAgregator.wsgi.application'
 
 # ИЗМЕНЕНО: Загружаем DATABASE_URL из переменной окружения
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///{}'.format(os.path.join(BASE_DIR, 'db.sqlite3')))
-DATABASES = {
-    'default': dj_database_url.parse(DATABASE_URL)
-}
+DATABASES ={
+	'default':{
+		'ENGINE':'django.db.backends.postgresql',
+		'NAME':'luchdb',
+		'USER':'luchuserdb',
+		'PASSWORD':'GTv81Ex6',
+		'HOST':'localhost',
+		'PORT':'',
+	}
+} 
 
 
-# Password validation
+#Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
